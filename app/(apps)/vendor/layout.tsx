@@ -25,25 +25,20 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const [shopName, setShopName] = useState("Espace Vendeur");
 
   useEffect(() => {
-    createClient().auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.push("/auth/sign-in");
-        return;
-      }
-      // Charger le nom boutique en arriere-plan seulement
-      createClient()
-        .from("vendors")
-        .select("id, shop_name")
-        .eq("user_id", user.id)
-        .limit(1)
-        .then(({ data }) => {
+    const init = async () => {
+      try {
+        const { data: { user } } = await createClient().auth.getUser();
+        if (!user) { router.push("/auth/sign-in"); return; }
+        try {
+          const { data } = await createClient().from("vendors").select("id, shop_name").eq("user_id", user.id).limit(1);
           const saved = localStorage.getItem("vendor_selected_id");
           const selected = data?.find((v: any) => v.id === saved) ?? data?.[0];
           if (selected?.shop_name) setShopName(selected.shop_name);
-        })
-        .catch(() => {});
+        } catch {}
+      } catch {}
       setReady(true);
-    });
+    };
+    init();
   }, []);
 
   const logout = async () => {
@@ -63,7 +58,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       ? "flex flex-col h-full"
       : "w-64 bg-white border-r border-gray-100 fixed h-full hidden lg:flex flex-col z-20"}>
       <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#0a2a1f] rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-[#2B3090] rounded-xl flex items-center justify-center flex-shrink-0">
           <TbBuildingStore className="text-white" size={20} />
         </div>
         <div className="min-w-0">
@@ -78,7 +73,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
             <Link key={item.href} href={item.href}
               onClick={() => setOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
-                active ? "bg-[#0a2a1f] text-white font-medium" : "text-gray-600 hover:bg-gray-50"
+                active ? "bg-[#2B3090] text-white font-medium" : "text-gray-600 hover:bg-gray-50"
               }`}>
               <item.icon size={18} className="flex-shrink-0" />
               {item.label}
@@ -103,7 +98,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-gray-50">
       <div className="lg:hidden bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#0a2a1f] rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-[#2B3090] rounded-lg flex items-center justify-center">
             <TbBuildingStore className="text-white" size={16} />
           </div>
           <span className="font-bold text-gray-800 text-sm truncate max-w-[180px]">{shopName}</span>
