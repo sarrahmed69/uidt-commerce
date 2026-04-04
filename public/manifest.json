@@ -1,0 +1,22 @@
+{
+  "name": "UIDT Commerce",
+  "short_name": "UIDT",
+  "description": "La marketplace du campus UIDT",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a2a1f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/uidt-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo_big.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
