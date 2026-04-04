@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
 
   if (code) {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,7 +26,6 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // Verifier si vendeur -> rediriger vers dashboard vendor
       const { data: vendors } = await supabase
         .from("vendors")
         .select("id")
