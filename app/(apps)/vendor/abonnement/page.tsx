@@ -96,7 +96,7 @@ export default function AbonnementPage() {
 
   const sc = statusConfig[status];
   const StatusIcon = sc.Icon;
-  const showPayBtn = status === "expired" || status === "trial" || status === "none" || (status === "active" && daysLeft <= 7);
+  const showPayBtn = ["expired", "trial", "none"].includes(status) || (status === "active" && daysLeft <= 7);
 
   const AVANTAGES = [
     "Produits visibles par tous les etudiants du campus",
