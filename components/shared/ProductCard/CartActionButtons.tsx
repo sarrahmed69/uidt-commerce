@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { useCartStore } from "@/lib/zustand/cart-store";
 
@@ -20,7 +20,7 @@ const CartActionButtons: React.FC<CartActionButtonsProps> = ({ product, currentS
 
   const handleIncrease = () => {
     if (qty === 0) {
-      addItem({ ...product, qty: 1 });
+      addItem({ ...product, qty: 1, vendorId: product.vendorId ?? "" });
     } else if (qty < currentStock) {
       updateQty(product.id, 1);
     }
