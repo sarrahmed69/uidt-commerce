@@ -43,10 +43,10 @@ export default function MesProduits() {
       if (!vid) { setLoading(false); return; }
 
       // Verification abonnement
-      const expired = !vendor.subscription_expires_at ||
-        new Date(vendor.subscription_expires_at) <= new Date();
+      const expired = !vendor?.subscription_expires_at ||
+        new Date(vendor?.subscription_expires_at) <= new Date();
       const isOk =
-        (vendor.subscription_status === "active" && !expired) ||
+        (vendor?.subscription_status === "active" && !expired) ||
         (vendor.subscription_status === "trial" && !expired) ||
         vendor.subscription_status === "pending";
       setSuspended(!isOk);
