@@ -18,10 +18,25 @@ export default function VendeurDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     (async () => {
       const supabase = createClient();
-      const [{ data: v }, { data: p }] = await Promise.all([
-        supabase.from("vendors").select("*").eq("id", params.id).single(),
-        supabase.from("products").select("id,name,price,images,category,stock").eq("vendor_id", params.id).eq("status","active").order("created_at",{ascending:false}),
-      ]);
+
+      const { data: v } = await supabase
+        .from("vendors")
+        .select("*")
+        .eq("id", params.id)
+        .maybeSingle();
+
+      if (!v) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: p } = await supabase
+        .from("products")
+        .select("id,name,price,images,category,stock")
+        .eq("vendor_id", v.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false });
+
       setVendor(v);
       setProducts(p || []);
       setLoading(false);
@@ -47,7 +62,6 @@ export default function VendeurDetailPage({ params }: { params: { id: string } }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Banniere */}
       <div className="h-40 bg-gradient-to-r from-primary to-accent relative">
         <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle at 30% 50%, white 0%, transparent 60%)"}} />
       </div>
@@ -57,7 +71,6 @@ export default function VendeurDetailPage({ params }: { params: { id: string } }
           <TbArrowLeft size={16} /> Retour aux vendeurs
         </Link>
 
-        {/* Profil */}
         <div className="bg-white rounded-2xl p-6 shadow-sm -mt-16 relative z-10 mb-6">
           <div className="flex flex-col sm:flex-row gap-5 items-start">
             <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0 border-4 border-white shadow text-primary font-bold text-3xl">
@@ -99,7 +112,6 @@ export default function VendeurDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
-        {/* Produits */}
         <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
           <h2 className="font-bold text-gray-800 text-lg mb-6 flex items-center gap-2">
             <TbPackage className="text-primary" size={22} /> Produits de la boutique
