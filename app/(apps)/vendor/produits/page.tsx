@@ -47,8 +47,8 @@ export default function MesProduits() {
         new Date(vendor?.subscription_expires_at) <= new Date();
       const isOk =
         (vendor?.subscription_status === "active" && !expired) ||
-        (vendor.subscription_status === "trial" && !expired) ||
-        vendor.subscription_status === "pending";
+        (vendor?.subscription_status === "trial" && !expired) ||
+        vendor?.subscription_status === "pending";
       setSuspended(!isOk);
 
       const { data } = await supabase.from("products")
