@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import OtpInput from "../components/OtpInput";
@@ -28,7 +28,7 @@ const OtpForm: React.FC = () => {
   const onOtpSubmit = async (data: OtpFormData) => {
     const id = toast.loading("Vérification en cours...");
     try {
-      const response = await confirmOTP.mutateAsync(data);
+      const response = await confirmOTP.mutateAsync(data.otp);
       if (response?.success) {
         toast.success("Compte vérifié avec succès !");
         router.push("/user/dashboard");
