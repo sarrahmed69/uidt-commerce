@@ -10,7 +10,6 @@ export const config = {
     "/auth/:path*",
     "/user/:path*",
     "/vendor/:path*",
-    "/admin/:path*",
     "/cart/checkout",
   ],
 };
