@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import OtpInput from "../components/OtpInput";
@@ -26,21 +26,17 @@ const OtpForm: React.FC = () => {
   }, []);
 
   const onOtpSubmit = async (data: OtpFormData) => {
-    const id = toast.loading("Vérification en cours...");
+    const id = toast.loading("Verification en cours...");
     try {
       const response = await confirmOTP.mutateAsync(data.otp);
       if (response?.success) {
-        toast.success("Compte vérifié avec succès !");
+        toast.success("Compte verifie avec succes !");
         router.push("/user/dashboard");
       } else {
-        toast.error(response?.message || "Code invalide. Veuillez réessayer.");
+        toast.error(response?.message || "Code invalide. Veuillez reessayer.");
       }
     } catch (error: unknown) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Une erreur est survenue. Veuillez réessayer."
-      );
+      toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
     } finally {
       toast.done(id);
     }
@@ -51,28 +47,18 @@ const OtpForm: React.FC = () => {
     try {
       const response = await resendOTP.mutateAsync();
       if (response?.success) {
-        toast.success(response.message || "Code renvoyé avec succès !");
+        toast.success(response.message || "Code renvoye avec succes !");
       } else {
-        toast.error(response?.message || "Échec du renvoi. Veuillez réessayer.");
+        toast.error(response?.message || "Echec du renvoi. Veuillez reessayer.");
       }
     } catch (error: unknown) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Une erreur est survenue. Veuillez réessayer."
-      );
+      toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
     } finally {
       toast.done(id);
     }
   };
 
-  interface FormSubmissionEvent extends React.FormEvent<HTMLFormElement> {
-    currentTarget: HTMLFormElement & {
-      elements: { otp: HTMLInputElement };
-    };
-  }
-
-  const FormSubmission = (e: FormSubmissionEvent) => {
+  const FormSubmission = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const otpValues = Array.from(formData.entries())
@@ -80,44 +66,28 @@ const OtpForm: React.FC = () => {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([, value]) => value)
       .join("");
-
     if (otpValues.length < 6) {
-      return toast.error("Code invalide. Veuillez réessayer.");
+      return toast.error("Code invalide. Veuillez reessayer.");
     }
     onOtpSubmit({ otp: otpValues });
   };
 
   return (
-    <AuthLayout
-      title="Vérifier le compte"
-      subtitle="Entrez le code OTP envoyé à votre adresse e-mail"
-    >
+    <AuthLayout title="Verifier le compte" subtitle="Entrez le code OTP envoye a votre adresse e-mail">
       <form className="max-w-96 w-full mt-4" onSubmit={FormSubmission}>
-        <OtpInput
-          onOtpSubmit={(otp: string) => onOtpSubmit({ otp })}
-          length={6}
-        />
+        <OtpInput onOtpSubmit={(otp: string) => onOtpSubmit({ otp })} length={6} />
         <div className="text-xs text-center mt-4">
-          <span suppressHydrationWarning>
-            Entrez le code à 6 chiffres envoyé à {userEmail}
-          </span>
+          <span suppressHydrationWarning>Entrez le code a 6 chiffres envoye a {userEmail}</span>
         </div>
         <div className="flex flex-col justify-center items-center mt-4">
-          <button
-            disabled={resendOTP.isPending || confirmOTP.isPending}
-            type="submit"
-            className="bg-primary text-white hover:bg-accent w-full h-11 rounded-md text-sm flex justify-center items-center gap-x-3 transition-colors"
-          >
-            Vérifier
+          <button disabled={resendOTP.isPending || confirmOTP.isPending} type="submit"
+            className="bg-primary text-white hover:bg-accent w-full h-11 rounded-md text-sm flex justify-center items-center gap-x-3 transition-colors">
+            Verifier
           </button>
           <div className="flex items-center justify-center gap-x-4 text-sm mt-4">
-            <span>Vous n&apos;avez pas reçu le code ? </span>
-            <button
-              onClick={() => onOtpResend()}
-              disabled={resendOTP.isPending || confirmOTP.isPending}
-              type="button"
-              className="text-primary font-medium underline"
-            >
+            <span>Vous n&apos;avez pas recu le code ? </span>
+            <button onClick={() => onOtpResend()} disabled={resendOTP.isPending || confirmOTP.isPending}
+              type="button" className="text-primary font-medium underline">
               Renvoyer
             </button>
           </div>
