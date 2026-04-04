@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import AuthInput from "../components/AuthInput";
 import { HiAtSymbol } from "react-icons/hi";
 import { z } from "zod";
@@ -31,7 +31,7 @@ const ForgetPassword = () => {
   const onSubmit = async (data: ForgetPasswordFormData) => {
     const id = toast.loading("Envoi en cours...");
     try {
-      const response = await resetPassword.mutateAsync(data);
+      const response = await resetPassword.mutateAsync(data.email);
       if (response?.success) {
         reset();
         toast.success(response.message || "Demande envoyée avec succès.");
