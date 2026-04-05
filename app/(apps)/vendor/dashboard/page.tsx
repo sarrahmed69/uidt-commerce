@@ -3,22 +3,15 @@ import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  TbBuildingStore, TbPlus, TbPackage, TbLoader2,
-  TbShoppingBag, TbChevronRight, TbStar, TbCheck,
-  TbTrash, TbX, TbCreditCard, TbPencil, TbEye, TbLock,
-} from "react-icons/tb";
+import { TbBuildingStore, TbPlus, TbPackage, TbLoader2, TbShoppingBag, TbChevronRight, TbStar, TbCheck, TbTrash, TbX, TbCreditCard, TbPencil, TbEye, TbLock } from "react-icons/tb";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
-// ── Modal HORS du composant parent pour eviter re-render ──
 function BoutiqueModal({ title, subtitle, values, onChangeName, onChangePhone, onChangeBatiment, onChangeChambre, onSave, onClose, saving, saveLabel }: {
   title: string; subtitle: string;
   values: { shop_name: string; whatsapp: string; batiment: string; chambre: string };
-  onChangeName: (v: string) => void;
-  onChangePhone: (v: string) => void;
-  onChangeBatiment: (v: string) => void;
-  onChangeChambre: (v: string) => void;
-  onSave: () => void; onClose: () => void;
-  saving: boolean; saveLabel: string;
+  onChangeName: (v: string) => void; onChangePhone: (v: string) => void;
+  onChangeBatiment: (v: string) => void; onChangeChambre: (v: string) => void;
+  onSave: () => void; onClose: () => void; saving: boolean; saveLabel: string;
 }) {
   const inputClass = "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30";
   return (
@@ -34,53 +27,26 @@ function BoutiqueModal({ title, subtitle, values, onChangeName, onChangePhone, o
         <div className="p-6 space-y-4">
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">Nom de la boutique *</label>
-            <input
-              className={inputClass}
-              placeholder="Ex: Kaay Dieundeu"
-              value={values.shop_name}
-              onChange={e => onChangeName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && onSave()}
-              autoFocus
-            />
+            <input className={inputClass} placeholder="Ex: Kaay Dieundeu" value={values.shop_name} onChange={e => onChangeName(e.target.value)} onKeyDown={e => e.key === "Enter" && onSave()} autoFocus />
           </div>
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">Telephone WhatsApp</label>
-            <input
-              className={inputClass}
-              placeholder="+221 77 123 45 67"
-              value={values.whatsapp}
-              onChange={e => onChangePhone(e.target.value)}
-            />
+            <input className={inputClass} placeholder="+221 77 123 45 67" value={values.whatsapp} onChange={e => onChangePhone(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1.5 block">Batiment</label>
-              <input
-                className={inputClass}
-                placeholder="Ex: B7"
-                value={values.batiment}
-                onChange={e => onChangeBatiment(e.target.value)}
-              />
+              <input className={inputClass} placeholder="Ex: B7" value={values.batiment} onChange={e => onChangeBatiment(e.target.value)} />
             </div>
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1.5 block">Chambre</label>
-              <input
-                className={inputClass}
-                placeholder="Ex: 204"
-                value={values.chambre}
-                onChange={e => onChangeChambre(e.target.value)}
-              />
+              <input className={inputClass} placeholder="Ex: 204" value={values.chambre} onChange={e => onChangeChambre(e.target.value)} />
             </div>
           </div>
           <div className="flex gap-3 pt-1">
-            <button onClick={onClose}
-              className="flex-1 border border-gray-200 py-3 rounded-xl text-sm text-gray-500 hover:bg-gray-50">
-              Annuler
-            </button>
-            <button onClick={onSave} disabled={saving || !values.shop_name.trim()}
-              className="flex-1 bg-[#0a2a1f] text-white py-3 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
-              {saving && <TbLoader2 size={16} className="animate-spin" />}
-              {saveLabel}
+            <button onClick={onClose} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm text-gray-500 hover:bg-gray-50">Annuler</button>
+            <button onClick={onSave} disabled={saving || !values.shop_name.trim()} className="flex-1 bg-[#0a2a1f] text-white py-3 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+              {saving && <TbLoader2 size={16} className="animate-spin" />}{saveLabel}
             </button>
           </div>
         </div>
@@ -89,7 +55,6 @@ function BoutiqueModal({ title, subtitle, values, onChangeName, onChangePhone, o
   );
 }
 
-// ── Dashboard principal ──
 export default function VendorDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -103,14 +68,12 @@ export default function VendorDashboard() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Champs creation — chacun dans son propre state
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newBatiment, setNewBatiment] = useState("");
   const [newChambre, setNewChambre] = useState("");
-
-  // Champs edition
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editBatiment, setEditBatiment] = useState("");
@@ -145,11 +108,7 @@ export default function VendorDashboard() {
     })();
   }, []);
 
-  const selectBoutique = (id: string) => {
-    setSelectedId(id);
-    localStorage.setItem("vendor_selected_id", id);
-  };
-
+  const selectBoutique = (id: string) => { setSelectedId(id); localStorage.setItem("vendor_selected_id", id); };
   const resetCreate = () => { setNewName(""); setNewPhone(""); setNewBatiment(""); setNewChambre(""); };
   const resetEdit = () => { setEditName(""); setEditPhone(""); setEditBatiment(""); setEditChambre(""); };
 
@@ -158,16 +117,7 @@ export default function VendorDashboard() {
     setCreating(true);
     const rawPhone = newPhone.replace(/\D/g, "");
     const cleanPhone = rawPhone.length >= 9 ? rawPhone.slice(-9) : "";
-    const res = await fetch("/api/vendors/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        shopName: newName.trim(),
-        waveNumber: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : undefined,
-        type: "student",
-        campusDelivery: true,
-      }),
-    });
+    const res = await fetch("/api/vendors/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ shopName: newName.trim(), waveNumber: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : undefined, type: "student", campusDelivery: true }) });
     const json = await res.json();
     if (json.success && json.data) {
       const supabase = createClient();
@@ -179,9 +129,7 @@ export default function VendorDashboard() {
       setShowCreate(false);
       resetCreate();
       router.push("/vendor/produits/nouveau");
-    } else {
-      alert("Erreur : " + (json.error || "Impossible de creer la boutique"));
-    }
+    } else { alert("Erreur : " + (json.error || "Impossible de creer la boutique")); }
     setCreating(false);
   };
 
@@ -191,22 +139,15 @@ export default function VendorDashboard() {
     const supabase = createClient();
     const rawPhone = editPhone.replace(/\D/g, "");
     const cleanPhone = rawPhone.length >= 9 ? rawPhone.slice(-9) : "";
-    const { data, error } = await supabase.from("vendors").update({
-      shop_name: editName.trim(),
-      wave_number: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : null,
-    }).eq("id", showEdit.id).select().single();
-    if (!error && data) {
-      setBoutiques(prev => prev.map(b => b.id === data.id ? data : b));
-      setShowEdit(null);
-      resetEdit();
-    } else alert("Erreur : " + error?.message);
+    const { data, error } = await supabase.from("vendors").update({ shop_name: editName.trim(), wave_number: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : null }).eq("id", showEdit.id).select().single();
+    if (!error && data) { setBoutiques(prev => prev.map(b => b.id === data.id ? data : b)); setShowEdit(null); resetEdit(); }
+    else alert("Erreur : " + error?.message);
     setEditing(false);
   };
 
   const deleteBoutique = async (id: string) => {
-    if (!confirm("Supprimer cette boutique et tous ses produits ?")) return;
     setDeleting(id);
-    await fetch(`/api/vendors/${id}`, { method: "DELETE" });
+    await fetch("/api/vendors/"+id, { method: "DELETE" });
     const updated = boutiques.filter(b => b.id !== id);
     setBoutiques(updated);
     const next = updated[0]?.id ?? null;
@@ -214,19 +155,16 @@ export default function VendorDashboard() {
     if (next) localStorage.setItem("vendor_selected_id", next);
     else localStorage.removeItem("vendor_selected_id");
     setDeleting(null);
+    setConfirmDeleteId(null);
   };
 
-  if (loading) return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <TbLoader2 className="animate-spin text-primary" size={36} />
-    </div>
-  );
+  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><TbLoader2 className="animate-spin text-primary" size={36} /></div>;
 
   const firstName = user?.user_metadata?.firstName || user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Vendeur";
   const subStatus = selected?.subscription_status;
   const subExpiry = selected?.subscription_expires_at ? new Date(selected.subscription_expires_at) : null;
   const isActive = subStatus === "active" && subExpiry && subExpiry > new Date();
-  const isTrial  = subStatus === "trial"  && subExpiry && subExpiry > new Date();
+  const isTrial = subStatus === "trial" && subExpiry && subExpiry > new Date();
   const isPending = subStatus === "pending";
   const isSubscribed = isActive || isTrial || isPending;
   const isSuspended = !isSubscribed && boutiques.length > 0 && selected;
@@ -236,32 +174,21 @@ export default function VendorDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Bonjour, {firstName} !</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {boutiques.length} boutique{boutiques.length > 1 ? "s" : ""} · {totalProduits} produit{totalProduits > 1 ? "s" : ""}
-          </p>
+          <p className="text-sm text-gray-500 mt-0.5">{boutiques.length} boutique{boutiques.length > 1 ? "s" : ""} · {totalProduits} produit{totalProduits > 1 ? "s" : ""}</p>
         </div>
-        <button onClick={() => setShowCreate(true)}
-          className="bg-[#0a2a1f] text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 self-start sm:self-auto">
+        <button onClick={() => setShowCreate(true)} className="bg-[#0a2a1f] text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 self-start sm:self-auto">
           <TbPlus size={18} /> Nouvelle boutique
         </button>
       </div>
 
       {isSuspended && (
         <div className="bg-red-50 border-2 border-red-300 rounded-2xl overflow-hidden">
-          <div className="bg-red-500 px-5 py-3 flex items-center gap-2">
-            <TbLock className="text-white flex-shrink-0" size={18} />
-            <p className="font-bold text-white text-sm">Boutique suspendue — Abonnement expire</p>
-          </div>
+          <div className="bg-red-500 px-5 py-3 flex items-center gap-2"><TbLock className="text-white flex-shrink-0" size={18} /><p className="font-bold text-white text-sm">Boutique suspendue — Abonnement expire</p></div>
           <div className="p-5 space-y-3">
-            <p className="text-red-700 text-sm">
-              Vos produits ne sont plus visibles par les acheteurs. Renouvelez votre abonnement pour les reactiver immediatement.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Link href="/vendor/abonnement"
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
-                <TbCreditCard size={16} /> Renouveler maintenant — 1 000 FCFA
-              </Link>
-            </div>
+            <p className="text-red-700 text-sm">Vos produits ne sont plus visibles. Renouvelez pour les reactiver.</p>
+            <Link href="/vendor/abonnement" className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
+              <TbCreditCard size={16} /> Renouveler maintenant — 1 000 FCFA
+            </Link>
             <p className="text-xs text-red-400 text-center">Activation sous 24h apres verification du paiement Wave</p>
           </div>
         </div>
@@ -269,15 +196,10 @@ export default function VendorDashboard() {
 
       {boutiques.length === 0 ? (
         <div className="bg-white rounded-2xl p-10 sm:p-16 text-center shadow-sm">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <TbBuildingStore className="text-primary" size={40} />
-          </div>
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"><TbBuildingStore className="text-primary" size={40} /></div>
           <h3 className="text-lg font-bold text-gray-700 mb-2">Creez votre premiere boutique</h3>
           <p className="text-gray-400 text-sm mb-6">Ajoutez vos produits et commencez a vendre sur le campus.</p>
-          <button onClick={() => setShowCreate(true)}
-            className="bg-[#0a2a1f] text-white px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 hover:opacity-90">
-            <TbPlus size={18} /> Creer ma boutique
-          </button>
+          <button onClick={() => setShowCreate(true)} className="bg-[#0a2a1f] text-white px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 hover:opacity-90"><TbPlus size={18} /> Creer ma boutique</button>
         </div>
       ) : (
         <>
@@ -289,11 +211,8 @@ export default function VendorDashboard() {
               { label: "Avis", value: 0, icon: TbStar, color: "bg-yellow-50 text-yellow-500" },
             ].map(s => (
               <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${s.color}`}><s.icon size={20} /></div>
-                <div>
-                  <p className="text-xl font-bold text-gray-800">{s.value}</p>
-                  <p className="text-xs text-gray-400">{s.label}</p>
-                </div>
+                <div className={"w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 " + s.color}><s.icon size={20} /></div>
+                <div><p className="text-xl font-bold text-gray-800">{s.value}</p><p className="text-xs text-gray-400">{s.label}</p></div>
               </div>
             ))}
           </div>
@@ -301,19 +220,15 @@ export default function VendorDashboard() {
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-50 flex items-center justify-between">
               <h2 className="font-bold text-gray-800">Mes boutiques</h2>
-              <button onClick={() => setShowCreate(true)}
-                className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline">
-                <TbPlus size={14} /> Ajouter
-              </button>
+              <button onClick={() => setShowCreate(true)} className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline"><TbPlus size={14} /> Ajouter</button>
             </div>
             {boutiques.map(b => {
               const sub = b.subscription_status === "active" && b.subscription_expires_at && new Date(b.subscription_expires_at) > new Date();
               const nbProduits = produitsCounts[b.id] || 0;
               const isSelected = selectedId === b.id;
               return (
-                <div key={b.id} className={`flex items-center gap-3 px-5 py-4 border-b border-gray-50 last:border-0 transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-gray-50"}`}>
-                  <button onClick={() => selectBoutique(b.id)}
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0 transition-colors ${isSelected ? "bg-[#0a2a1f] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                <div key={b.id} className={"flex items-center gap-3 px-5 py-4 border-b border-gray-50 last:border-0 transition-colors " + (isSelected ? "bg-primary/5" : "hover:bg-gray-50")}>
+                  <button onClick={() => selectBoutique(b.id)} className={"w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0 transition-colors " + (isSelected ? "bg-[#0a2a1f] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
                     {b.shop_name[0].toUpperCase()}
                   </button>
                   <div className="flex-1 min-w-0 cursor-pointer" onClick={() => selectBoutique(b.id)}>
@@ -322,25 +237,15 @@ export default function VendorDashboard() {
                       {isSelected && <TbCheck size={14} className="text-primary flex-shrink-0" />}
                     </div>
                     <p className="text-xs mt-0.5">
-                      <span className={`font-medium ${sub ? "text-green-600" : "text-orange-500"}`}>{sub ? "Abonne" : "Non abonne"}</span>
+                      <span className={"font-medium " + (sub ? "text-green-600" : "text-orange-500")}>{sub ? "Abonne" : "Non abonne"}</span>
                       <span className="text-gray-400"> · {nbProduits} produit{nbProduits > 1 ? "s" : ""}</span>
                     </p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <Link href="/vendor/produits" onClick={() => selectBoutique(b.id)}
-                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-500 transition-colors">
-                      <TbEye size={15} />
-                    </Link>
-                    <Link href="/vendor/produits/nouveau" onClick={() => selectBoutique(b.id)}
-                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors">
-                      <TbPlus size={15} />
-                    </Link>
-                    <button onClick={() => { setShowEdit(b); setEditName(b.shop_name); setEditPhone(b.wave_number || ""); setEditBatiment(""); setEditChambre(""); }}
-                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-orange-50 hover:text-orange-500 transition-colors">
-                      <TbPencil size={15} />
-                    </button>
-                    <button onClick={() => deleteBoutique(b.id)}
-                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-400 transition-colors">
+                    <Link href="/vendor/produits" onClick={() => selectBoutique(b.id)} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-500 transition-colors"><TbEye size={15} /></Link>
+                    <Link href="/vendor/produits/nouveau" onClick={() => selectBoutique(b.id)} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors"><TbPlus size={15} /></Link>
+                    <button onClick={() => { setShowEdit(b); setEditName(b.shop_name); setEditPhone(b.wave_number || ""); setEditBatiment(""); setEditChambre(""); }} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-orange-50 hover:text-orange-500 transition-colors"><TbPencil size={15} /></button>
+                    <button onClick={() => setConfirmDeleteId(b.id)} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-400 transition-colors">
                       {deleting === b.id ? <TbLoader2 size={15} className="animate-spin" /> : <TbTrash size={15} />}
                     </button>
                   </div>
@@ -350,21 +255,15 @@ export default function VendorDashboard() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-50">
-              <h2 className="font-bold text-gray-800">Actions rapides</h2>
-            </div>
+            <div className="p-5 border-b border-gray-50"><h2 className="font-bold text-gray-800">Actions rapides</h2></div>
             {[
               { label: "Ajouter un produit", sub: isSuspended ? "Abonnement requis" : selected ? "Dans : " + selected.shop_name : "Selectionner une boutique", href: isSuspended ? "/vendor/abonnement" : "/vendor/produits/nouveau", icon: isSuspended ? TbLock : TbPlus, color: isSuspended ? "bg-red-100 text-red-400" : "bg-[#0a2a1f] text-white" },
               { label: "Mes produits", sub: totalProduits + " produit" + (totalProduits > 1 ? "s" : "") + " au total", href: "/vendor/produits", icon: TbPackage, color: "bg-blue-50 text-blue-500" },
               { label: "Abonnement", sub: isSubscribed ? "Abonnement actif" : "1 000 FCFA / mois", href: "/vendor/abonnement", icon: TbCreditCard, color: isSubscribed ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-500" },
             ].map((item, i) => (
-              <Link key={item.label + i} href={item.href}
-                className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.color}`}><item.icon size={20} /></div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 text-sm">{item.label}</p>
-                  <p className="text-xs text-gray-400 truncate">{item.sub}</p>
-                </div>
+              <Link key={item.label+i} href={item.href} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+                <div className={"w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 " + item.color}><item.icon size={20} /></div>
+                <div className="flex-1 min-w-0"><p className="font-medium text-gray-800 text-sm">{item.label}</p><p className="text-xs text-gray-400 truncate">{item.sub}</p></div>
                 <TbChevronRight size={18} className="text-gray-300 flex-shrink-0" />
               </Link>
             ))}
@@ -372,37 +271,28 @@ export default function VendorDashboard() {
         </>
       )}
 
-      {/* Modal creation */}
       {showCreate && (
-        <BoutiqueModal
-          title="Nouvelle boutique"
-          subtitle="Creez votre espace de vente sur UIDT Commerce"
+        <BoutiqueModal title="Nouvelle boutique" subtitle="Creez votre espace de vente sur UIDT Commerce"
           values={{ shop_name: newName, whatsapp: newPhone, batiment: newBatiment, chambre: newChambre }}
-          onChangeName={setNewName}
-          onChangePhone={setNewPhone}
-          onChangeBatiment={setNewBatiment}
-          onChangeChambre={setNewChambre}
-          onSave={createBoutique}
-          onClose={() => { setShowCreate(false); resetCreate(); }}
-          saving={creating}
-          saveLabel="Creer ma boutique"
-        />
+          onChangeName={setNewName} onChangePhone={setNewPhone} onChangeBatiment={setNewBatiment} onChangeChambre={setNewChambre}
+          onSave={createBoutique} onClose={() => { setShowCreate(false); resetCreate(); }} saving={creating} saveLabel="Creer ma boutique" />
       )}
 
-      {/* Modal edition */}
       {showEdit && (
-        <BoutiqueModal
-          title={"Modifier : " + showEdit.shop_name}
-          subtitle="Mettez a jour les informations de votre boutique"
+        <BoutiqueModal title={"Modifier : " + showEdit.shop_name} subtitle="Mettez a jour les informations de votre boutique"
           values={{ shop_name: editName, whatsapp: editPhone, batiment: editBatiment, chambre: editChambre }}
-          onChangeName={setEditName}
-          onChangePhone={setEditPhone}
-          onChangeBatiment={setEditBatiment}
-          onChangeChambre={setEditChambre}
-          onSave={saveBoutique}
-          onClose={() => { setShowEdit(null); resetEdit(); }}
-          saving={editing}
-          saveLabel="Enregistrer"
+          onChangeName={setEditName} onChangePhone={setEditPhone} onChangeBatiment={setEditBatiment} onChangeChambre={setEditChambre}
+          onSave={saveBoutique} onClose={() => { setShowEdit(null); resetEdit(); }} saving={editing} saveLabel="Enregistrer" />
+      )}
+
+      {confirmDeleteId && (
+        <ConfirmModal
+          message="Supprimer cette boutique ?"
+          subMessage="Tous ses produits seront effaces definitivement."
+          confirmLabel="Supprimer"
+          danger
+          onConfirm={() => deleteBoutique(confirmDeleteId)}
+          onCancel={() => setConfirmDeleteId(null)}
         />
       )}
     </div>
