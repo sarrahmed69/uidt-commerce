@@ -12,7 +12,7 @@ export default function VendorParametres() {
   const [saved, setSaved] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [form, setForm] = useState({ shopName: "", whatsapp: "", description: "" });
+  const [form, setForm] = useState({ shopName: "", wave_number: "", description: "" });
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -21,13 +21,13 @@ export default function VendorParametres() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
       setUser(user);
-      const { data: vendors } = await supabase.from("vendors").select("id, shop_name, whatsapp, description, logo_url").eq("user_id", user.id);
+      const { data: vendors } = await supabase.from("vendors").select("id, shop_name, wave_number, description, logo_url").eq("user_id", user.id);
       const v = vendors?.[0] ?? null;
       setVendor(v);
       setLogoUrl(v?.logo_url ?? null);
       setForm({
-        shopName: v?.shop_name || user.user_metadata?.shopName || "",
-        whatsapp: v?.whatsapp || user.user_metadata?.whatsapp || "",
+        shopName: v?.shop_name || "",
+        wave_number: v?.wave_number || "",
         description: v?.description || "",
       });
       setLoading(false);
@@ -61,7 +61,12 @@ export default function VendorParametres() {
     if (!vendor?.id) return;
     setSaving(true);
     const supabase = createClient();
-    await supabase.from("vendors").update({ shop_name: form.shopName, whatsapp: form.whatsapp, description: form.description }).eq("id", vendor.id);
+    const { error } = await supabase.from("vendors").update({
+      shop_name: form.shopName,
+      wave_number: form.wave_number,
+      description: form.description,
+    }).eq("id", vendor.id);
+    if (error) { alert("Erreur : " + error.message); setSaving(false); return; }
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -70,31 +75,8 @@ export default function VendorParametres() {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><TbLoader2 className="animate-spin text-primary" size={36} /></div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-64 bg-white border-r border-gray-100 fixed h-full hidden lg:flex flex-col">
-        <div className="p-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <TbBuildingStore className="text-white" size={20} />
-            </div>
-            <div><p className="font-bold text-gray-800 text-sm">Ma Boutique</p><p className="text-xs text-gray-400">Espace vendeur</p></div>
-          </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {[
-            { label: "Tableau de bord", href: "/vendor/dashboard" },
-            { label: "Mes produits", href: "/vendor/produits" },
-            { label: "Commandes", href: "/vendor/commandes" },
-            { label: "Parametres", href: "/vendor/parametres", active: true },
-          ].map((item) => (
-            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${item.active ? "bg-primary text-white font-medium" : "text-gray-600 hover:bg-gray-50"}`}>
-              <TbPackage size={17} /> {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
-      <main className="flex-1 lg:ml-64 p-6 md:p-10 max-w-2xl">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Link href="/vendor/dashboard" className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors">
             <TbArrowLeft size={20} className="text-gray-600" />
@@ -158,19 +140,19 @@ export default function VendorParametres() {
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block flex items-center gap-1">
-                <TbBrandWhatsapp size={15} className="text-green-500" /> WhatsApp
+                <TbBrandWhatsapp size={15} className="text-green-500" /> Numero WhatsApp / Wave
               </label>
               <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                placeholder="+221 77 123 45 67" value={form.whatsapp} onChange={e => setForm(f => ({...f, whatsapp: e.target.value}))} />
+                placeholder="771234567" value={form.wave_number} onChange={e => setForm(f => ({...f, wave_number: e.target.value}))} />
             </div>
           </div>
 
           <button onClick={save} disabled={saving}
-            className="w-full bg-[#2B3090] text-white font-bold py-3.5 rounded-xl hover:bg-[#1e2570] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg">
+            className="w-full bg-[#2B3090] text-white font-bold py-4 rounded-xl hover:bg-[#1e2570] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg">
             {saving ? <><TbLoader2 size={20} className="animate-spin" /> Enregistrement...</> : saved ? <><TbCheck size={20} /> Enregistre !</> : "Enregistrer les modifications"}
           </button>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
