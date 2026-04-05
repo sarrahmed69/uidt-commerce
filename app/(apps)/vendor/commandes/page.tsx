@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -184,7 +184,7 @@ export default function VendorCommandes() {
                     </button>
                   )}
                   {order.status === "confirmed" && (
-                    <button onClick={() => updateStatus(order.id, "delivered")} disabled={updating === order.id}
+                    <button onClick={async () => { await updateStatus(order.id, "delivered"); const reviewLink = `${window.location.origin}/avis/${order.id}`; if (order.whatsapp) { const msg = encodeURIComponent(`Bonjour ${order.buyer_name} ! Votre commande a ete livree. Laissez votre avis ici : ${reviewLink} Merci !`); window.open(`https://wa.me/${order.whatsapp.replace(/\D/g,"")}?text=${msg}`, "_blank"); } }} disabled={updating === order.id}
                       className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60">
                       {updating === order.id ? <TbLoader2 size={14} className="animate-spin" /> : <TbPackage size={14} />} Marquer livree
                     </button>

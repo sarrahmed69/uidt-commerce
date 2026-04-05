@@ -205,15 +205,14 @@ export default function VendorDashboard() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: "Produits", value: totalProduits, icon: TbPackage, color: "bg-blue-50 text-blue-500" },
-              { label: "Boutiques", value: boutiques.length, icon: TbBuildingStore, color: "bg-[#2B3090]/10 text-[#2B3090]" },
-              { label: "Commandes", value: totalOrders, icon: TbShoppingBag, color: "bg-orange-50 text-orange-500" },
-              { label: "Avis", value: 0, icon: TbStar, color: "bg-yellow-50 text-yellow-500" },
+              { label: "Produits", value: totalProduits, icon: TbPackage, color: "bg-blue-50 text-blue-500", href: "/vendor/produits" },
+              { label: "Boutiques", value: boutiques.length, icon: TbBuildingStore, color: "bg-[#2B3090]/10 text-[#2B3090]", href: "/vendor/dashboard" },
+              { label: "Commandes", value: totalOrders, icon: TbShoppingBag, color: "bg-orange-50 text-orange-500", href: "/vendor/commandes" },
             ].map(s => (
-              <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3">
+              <Link key={s.label} href={s.href} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md hover:scale-[1.02] transition-all duration-200 cursor-pointer">
                 <div className={"w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 " + s.color}><s.icon size={20} /></div>
                 <div><p className="text-xl font-bold text-gray-800">{s.value}</p><p className="text-xs text-gray-400">{s.label}</p></div>
-              </div>
+              </Link>
             ))}
           </div>
 
