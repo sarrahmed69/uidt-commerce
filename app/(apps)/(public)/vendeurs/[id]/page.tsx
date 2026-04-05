@@ -7,17 +7,17 @@ import { TbBuildingStore, TbStar, TbPhone, TbBrandWhatsapp, TbPackage, TbArrowLe
 
 const fmt = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
 
-export default function VendeurDetailPage({ params }: { params: { id: string } }) {
+export default function VendeurDetailPage() {
   const [vendor, setVendor] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const vendorId = (params as any).id || params.id;
-    if (!vendorId) return;
+    const id = window.location.pathname.split("/").pop();
+    if (!id) { setLoading(false); return; }
     (async () => {
       const supabase = createClient();
-      const { data: v } = await supabase.from("vendors").select("*").eq("id", vendorId).maybeSingle();
+      const { data: v } = await supabase.from("vendors").select("*").eq("id", id).maybeSingle();
       if (!v) { setLoading(false); return; }
       const { data: p } = await supabase.from("products").select("id,name,price,images,category,stock").eq("vendor_id", v.id).eq("status","active").order("created_at",{ascending:false});
       setVendor(v);
