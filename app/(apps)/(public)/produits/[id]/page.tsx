@@ -26,7 +26,7 @@ export default function ProduitDetail() {
   useEffect(() => {
     const load = async () => {
       const supabase = createClient();
-      const { data } = await supabase.from("products").select("*, vendors(id, shop_name, wave_number)").eq("id", id).single();
+      const { data } = await supabase.from("products").select("*, vendors(id, shop_name, wave_number, logo_url)").eq("id", id).single();
       setProduct(data);
       if (data) await supabase.from("products").update({ views: (data.views || 0) + 1 }).eq("id", id as string);
       setLoading(false);
@@ -261,7 +261,7 @@ export default function ProduitDetail() {
               </span>
             )}
             <h2 className="text-2xl font-bold text-gray-900 mt-2">{product.name}</h2>
-            <p className="text-3xl font-bold text-primary mt-2">{formatPrice(product.price)}</p>
+            {product.promo_price && product.promo_ends_at && new Date(product.promo_ends_at) > new Date() ? (<div className="mt-2"><div className="flex items-center gap-2"><span className="bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-full">PROMO</span><span className="text-xs text-gray-400">Fin le {new Date(product.promo_ends_at).toLocaleDateString("fr-FR")}</span></div><div className="flex items-center gap-3 mt-1"><p className="text-3xl font-bold text-red-500">{formatPrice(product.promo_price)}</p><p className="text-lg text-gray-400 line-through">{formatPrice(product.price)}</p><span className="bg-red-100 text-red-600 text-xs font-black px-2 py-1 rounded-lg">-{Math.round((1 - product.promo_price/product.price)*100)}%</span></div></div>) : (<p className="text-3xl font-bold text-primary mt-2">{formatPrice(product.price)}</p>)}
 
             {/* Stock */}
             {product.stock !== null && (
@@ -291,7 +291,7 @@ export default function ProduitDetail() {
           {product.vendors?.shop_name && (
             <div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3">
               <div className="w-10 h-10 bg-[#2B3090]/10 rounded-xl flex items-center justify-center font-bold text-[#2B3090]">
-                {product.vendors.shop_name[0].toUpperCase()}
+                {product.vendors.logo_url ? <img src={product.vendors.logo_url} alt="" className="w-full h-full object-cover rounded-xl" /> : product.vendors.shop_name[0].toUpperCase()}
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-800">{product.vendors.shop_name}</p>

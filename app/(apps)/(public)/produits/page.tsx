@@ -17,7 +17,7 @@ export default function ProduitsPage() {
   useEffect(() => {
     const load = async () => {
       const supabase = createClient();
-      const { data } = await supabase.from("products").select("*").eq("status", "active").order("created_at", { ascending: false });
+      const { data } = await supabase.from("products").select("id,name,price,category,images,stock,delivery_available,promo_price,promo_ends_at").eq("status", "active").order("created_at", { ascending: false });
       setProducts(data || []);
       setLoading(false);
     };
@@ -86,7 +86,7 @@ export default function ProduitsPage() {
                 <div className="p-3">
                   <p className="font-semibold text-gray-800 text-sm truncate">{p.name}</p>
                   {p.category && <span className="text-xs bg-blue-50 text-[#2B3090] px-2 py-0.5 rounded-full">{p.category}</span>}
-                  <p className="text-[#2B3090] font-bold mt-2">{formatPrice(p.price)}</p>
+                  {p.promo_price && p.promo_ends_at && new Date(p.promo_ends_at) > new Date() ? (<div className="mt-2"><div className="flex items-center gap-1 mb-0.5"><span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">PROMO</span><span className="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 rounded-full">-{Math.round((1 - p.promo_price/p.price)*100)}%</span></div><div className="flex items-center gap-2"><p className="text-red-500 font-bold">{formatPrice(p.promo_price)}</p><p className="text-gray-400 text-xs line-through">{formatPrice(p.price)}</p></div></div>) : (<p className="text-[#2B3090] font-bold mt-2">{formatPrice(p.price)}</p>)}
                   {p.delivery_available && <p className="text-xs text-green-600 mt-1">✓ Livraison campus</p>}
                   <div className="flex items-center gap-2 mt-3">
                     <div className="flex-1 bg-[#2B3090] hover:bg-[#1A1F6B] text-white text-xs font-semibold py-2 rounded-xl flex items-center justify-center gap-1 transition-colors">
