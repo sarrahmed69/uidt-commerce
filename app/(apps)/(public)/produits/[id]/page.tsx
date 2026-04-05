@@ -331,7 +331,7 @@ export default function ProduitDetail() {
             ) : (
               <button onClick={() => setShowModal(true)}
                 className="w-full bg-[#2B3090] hover:opacity-90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-opacity text-base">
-                <TbShoppingBag size={22} /> Commander — {formatPrice(product.price * qty)}
+                <TbShoppingBag size={22} /> Commander — {formatPrice((product.promo_price && product.promo_ends_at && new Date(product.promo_ends_at) > new Date() ? product.promo_price : product.price) * qty)}
               </button>
             )}
 
