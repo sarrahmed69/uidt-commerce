@@ -2,6 +2,9 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 
+const WAVE_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Wave_money_logo.svg/320px-Wave_money_logo.svg.png";
+const OM_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Orange_Money_logo.svg/320px-Orange_Money_logo.svg.png";
+
 function FooterLogo() {
   const logoVariants = {
     hidden: { opacity: 0, x: -30 },
@@ -61,37 +64,39 @@ function FooterLogo() {
         <div className="flex flex-wrap gap-3 items-center">
 
           {/* WAVE */}
-          <div title="Wave" className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm cursor-default h-11">
-            <Image
-              src="/images/wave-logo.png"
-              alt="Wave"
-              width={60}
-              height={28}
-              className="object-contain h-7 w-auto"
-            />
+          <div title="Wave" className="bg-[#29ABE2] rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm cursor-default">
+            <svg width="22" height="22" viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="22" fill="#29ABE2"/>
+              <ellipse cx="22" cy="28" rx="10" ry="12" fill="white"/>
+              <ellipse cx="22" cy="26" rx="7" ry="9" fill="#1a1a2e"/>
+              <ellipse cx="22" cy="28" rx="5" ry="6" fill="white"/>
+              <path d="M16 14 Q19 10 22 14 Q25 10 28 14" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              <circle cx="18" cy="20" r="1.5" fill="white"/>
+              <circle cx="26" cy="20" r="1.5" fill="white"/>
+            </svg>
+            <span className="text-white text-xs font-bold tracking-wide">Wave</span>
           </div>
 
           {/* ORANGE MONEY */}
-          <div title="Orange Money" className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm cursor-default h-11">
-            <Image
-              src="/images/orange-money-logo.png"
-              alt="Orange Money"
-              width={80}
-              height={28}
-              className="object-contain h-7 w-auto"
-            />
+          <div title="Orange Money" className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm cursor-default">
+            <svg width="22" height="22" viewBox="0 0 44 44" fill="none">
+              <path d="M8 8 L26 8 L36 20 L18 20 Z" fill="#1a1a1a"/>
+              <path d="M18 24 L36 24 L28 36 L10 36 Z" fill="#FF6600"/>
+            </svg>
+            <span className="text-gray-800 text-xs font-bold tracking-wide">Orange Money</span>
           </div>
 
           {/* CASH */}
-          <div title="Cash" className="bg-[#2d6a2d] rounded-xl px-3 py-2 flex items-center gap-2 shadow-sm cursor-default h-11">
-            <svg width="22" height="16" viewBox="0 0 44 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="1" y="1" width="42" height="26" rx="3" fill="#2d6a2d" stroke="white" strokeWidth="1.5"/>
-              <circle cx="22" cy="14" r="7" stroke="white" strokeWidth="1.5" fill="none"/>
-              <text x="22" y="18.5" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" fontFamily="serif">F</text>
-              <rect x="4" y="4" width="6" height="4" rx="1" fill="white" opacity="0.5"/>
-              <rect x="34" y="20" width="6" height="4" rx="1" fill="white" opacity="0.5"/>
+          <div title="Cash FCFA" className="bg-[#2d8a2d] rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm cursor-default">
+            <svg width="24" height="18" viewBox="0 0 48 32" fill="none">
+              <rect x="2" y="6" width="44" height="22" rx="3" fill="#1a5c1a" stroke="#4ade80" strokeWidth="1"/>
+              <rect x="1" y="3" width="44" height="22" rx="3" fill="#2d8a2d" stroke="#4ade80" strokeWidth="1"/>
+              <circle cx="23" cy="14" r="7" stroke="#4ade80" strokeWidth="1.5" fill="none"/>
+              <text x="23" y="18" textAnchor="middle" fill="#4ade80" fontSize="8" fontWeight="bold">F</text>
+              <rect x="3" y="5" width="5" height="3" rx="1" fill="#4ade80" opacity="0.5"/>
+              <rect x="38" y="16" width="5" height="3" rx="1" fill="#4ade80" opacity="0.5"/>
             </svg>
-            <span className="text-white text-xs font-bold">Cash FCFA</span>
+            <span className="text-white text-xs font-bold tracking-wide">Cash FCFA</span>
           </div>
 
         </div>
