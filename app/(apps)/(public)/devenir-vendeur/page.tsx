@@ -118,7 +118,7 @@ export default function DevenirVendeurPage() {
               {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-2xl px-4 py-3">⚠ {error}</div>}
 
               {[
-                { label: "Nom complet", key: "nom", icon: TbUser, type: "text", placeholder: "Votre nom complet", required: true },
+                { label: "Nom complet", key: "nom" as keyof typeof form, icon: TbUser, type: "text", placeholder: "Votre nom complet", required: true },
                 { label: "Email", key: "email", icon: TbMail, type: "email", placeholder: "email@gmail.com", required: true },
                 { label: "Telephone", key: "telephone", icon: TbPhone, type: "text", placeholder: "+221 77 123 45 67", required: false },
               ].map(f => (
@@ -127,7 +127,7 @@ export default function DevenirVendeurPage() {
                   <div className="relative">
                     <f.icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={17} />
                     <input className={inputClass} type={f.type} placeholder={f.placeholder}
-                      value={form[f.key]} onChange={e => setForm({...form, [f.key]: e.target.value})} />
+                      value={(form as any)[f.key]} onChange={e => setForm({...form, [f.key]: e.target.value})} />
                   </div>
                 </div>
               ))}
