@@ -1,4 +1,3 @@
-$bytes = [System.Text.Encoding]::UTF8.GetBytes(@'
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -8,16 +7,17 @@ import { TbBuildingStore, TbStar, TbPhone, TbBrandWhatsapp, TbPackage, TbArrowLe
 
 const fmt = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
 
-export default function VendeurDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function VendeurDetailPage({ params }: { params: { id: string } }) {
   const [vendor, setVendor] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const vendorId = (params as any).id || params.id;
+    if (!vendorId) return;
     (async () => {
       const supabase = createClient();
-      const { id } = await params;
-      const { data: v } = await supabase.from("vendors").select("*").eq("id", id).maybeSingle();
+      const { data: v } = await supabase.from("vendors").select("*").eq("id", vendorId).maybeSingle();
       if (!v) { setLoading(false); return; }
       const { data: p } = await supabase.from("products").select("id,name,price,images,category,stock").eq("vendor_id", v.id).eq("status","active").order("created_at",{ascending:false});
       setVendor(v);
@@ -87,6 +87,3 @@ export default function VendeurDetailPage({ params }: { params: Promise<{ id: st
     </div>
   );
 }
-'@)
-[System.IO.File]::WriteAllBytes((Join-Path $PWD 'app\(apps)\(public)\vendeurs\[id]\page.tsx'), $bytes)
-Write-Host "OK!" -ForegroundColor Green
