@@ -175,7 +175,7 @@ export default function AdminPage() {
   if (!authed) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm overflow-hidden">
-        <div className="bg-[#0a2a1f] p-8 text-center">
+        <div className="bg-[#2B3090] p-8 text-center">
           <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><TbLock className="text-white" size={32} /></div>
           <h1 className="text-white font-bold text-xl">Espace Admin</h1>
           <p className="text-white/50 text-sm mt-1">UIDT Commerce</p>
@@ -183,17 +183,17 @@ export default function AdminPage() {
         <div className="p-6 space-y-4">
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Email</label>
-            <input type="email" className={"w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm outline-none transition-all " + (pwError ? "border-red-400 ring-2 ring-red-200" : "border-gray-200 focus:ring-2 focus:ring-primary/30")} placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && login()} autoFocus />
+            <input type="email" className={"w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm outline-none transition-all " + (pwError ? "border-red-400 ring-2 ring-red-200" : "border-gray-200 focus:ring-2 focus:ring-[#2B3090]/30")} placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && login()} autoFocus />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Mot de passe</label>
             <div className="relative">
-              <input type={showPw ? "text" : "password"} className={"w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm outline-none pr-10 transition-all " + (pwError ? "border-red-400 ring-2 ring-red-200" : "border-gray-200 focus:ring-2 focus:ring-primary/30")} placeholder="Mot de passe" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && login()} />
+              <input type={showPw ? "text" : "password"} className={"w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm outline-none pr-10 transition-all " + (pwError ? "border-red-400 ring-2 ring-red-200" : "border-gray-200 focus:ring-2 focus:ring-[#2B3090]/30")} placeholder="Mot de passe" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && login()} />
               <button onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">{showPw ? <TbEyeOff size={18} /> : <TbEye size={18} />}</button>
             </div>
             {pwError && <p className="text-red-500 text-xs mt-1.5 font-medium">Email ou mot de passe incorrect</p>}
           </div>
-          <button onClick={login} className="w-full bg-[#0a2a1f] text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">Acceder au panneau admin</button>
+          <button onClick={login} className="w-full bg-[#2B3090] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#1e2570] transition-opacity">Acceder au panneau admin</button>
         </div>
       </div>
     </div>
@@ -211,7 +211,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-[#0a2a1f] text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold flex items-center gap-2 animate-pulse">
+        <div className="fixed top-4 right-4 z-50 bg-[#2B3090] text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold flex items-center gap-2 animate-pulse">
           <TbCheck size={18} /> {toast}
         </div>
       )}
@@ -252,7 +252,7 @@ export default function AdminPage() {
       {showExtend && (
         <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={() => setShowExtend(null)}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-[#0a2a1f] px-6 py-5">
+            <div className="bg-[#2B3090] px-6 py-5">
               <h3 className="font-bold text-white">Prolonger l abonnement</h3>
               <p className="text-white/60 text-sm mt-0.5">{showExtend.shop_name}</p>
             </div>
@@ -261,12 +261,12 @@ export default function AdminPage() {
                 <label className="text-sm font-semibold text-gray-700 mb-3 block">Nombre de jours a ajouter</label>
                 <div className="flex items-center gap-4 justify-center">
                   <button onClick={() => setExtendDays(d => Math.max(1, d - 1))} className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"><TbMinus size={18} /></button>
-                  <input type="number" min="1" max="365" value={extendDays} onChange={e => setExtendDays(Math.max(1, parseInt(e.target.value) || 1))} className="w-20 text-center text-2xl font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-xl py-2 outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type="number" min="1" max="365" value={extendDays} onChange={e => setExtendDays(Math.max(1, parseInt(e.target.value) || 1))} className="w-20 text-center text-2xl font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-xl py-2 outline-none focus:ring-2 focus:ring-[#2B3090]/30" />
                   <button onClick={() => setExtendDays(d => Math.min(365, d + 1))} className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"><TbPlus size={18} /></button>
                 </div>
                 <div className="flex gap-2 mt-3 justify-center flex-wrap">
                   {[7, 15, 30, 60, 90].map(d => (
-                    <button key={d} onClick={() => setExtendDays(d)} className={"px-3 py-1.5 rounded-xl text-xs font-bold transition-colors " + (extendDays === d ? "bg-[#0a2a1f] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>{d}j</button>
+                    <button key={d} onClick={() => setExtendDays(d)} className={"px-3 py-1.5 rounded-xl text-xs font-bold transition-colors " + (extendDays === d ? "bg-[#2B3090] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>{d}j</button>
                   ))}
                 </div>
               </div>
@@ -277,7 +277,7 @@ export default function AdminPage() {
               )}
               <div className="flex gap-2">
                 <button onClick={() => setShowExtend(null)} className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">Annuler</button>
-                <button onClick={extendSubscription} disabled={extending} className="flex-1 bg-[#0a2a1f] text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2">
+                <button onClick={extendSubscription} disabled={extending} className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#1e2570] transition-opacity disabled:opacity-60 flex items-center justify-center gap-2">
                   {extending ? <TbLoader2 size={16} className="animate-spin" /> : <TbCheck size={16} />} Confirmer
                 </button>
               </div>
@@ -331,7 +331,7 @@ export default function AdminPage() {
 
         <div className="flex gap-1 bg-white border border-gray-200 rounded-2xl p-1 w-fit">
           {[{ key: "boutiques", label: "Boutiques", icon: TbBuildingStore }, { key: "stats", label: "Statistiques", icon: TbCurrencyDollar }, { key: "paiements", label: "Historique", icon: TbHistory }].map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key as any)} className={"flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors " + (activeTab === t.key ? "bg-[#0a2a1f] text-white" : "text-gray-500 hover:text-gray-700")}>
+            <button key={t.key} onClick={() => setActiveTab(t.key as any)} className={"flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors " + (activeTab === t.key ? "bg-[#2B3090] text-white" : "text-gray-500 hover:text-gray-700")}>
               <t.icon size={16} /> {t.label}
             </button>
           ))}
@@ -387,11 +387,11 @@ export default function AdminPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <TbSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30" placeholder="Rechercher une boutique..." value={search} onChange={e => setSearch(e.target.value)} />
+                <input className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/30" placeholder="Rechercher une boutique..." value={search} onChange={e => setSearch(e.target.value)} />
               </div>
               <div className="flex gap-2 flex-wrap">
                 {[{ key: "all", label: "Tous" }, { key: "pending", label: "En attente" }, { key: "trial", label: "Essai" }, { key: "active", label: "Actifs" }, { key: "expired", label: "Suspendus" }].map(f => (
-                  <button key={f.key} onClick={() => setFilter(f.key)} className={"px-3 py-2 rounded-xl text-xs font-bold transition-colors " + (filter === f.key ? "bg-[#0a2a1f] text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50")}>
+                  <button key={f.key} onClick={() => setFilter(f.key)} className={"px-3 py-2 rounded-xl text-xs font-bold transition-colors " + (filter === f.key ? "bg-[#2B3090] text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50")}>
                     {f.label}{f.key === "pending" && pending > 0 && <span className="ml-1.5 bg-yellow-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{pending}</span>}
                   </button>
                 ))}
@@ -410,7 +410,7 @@ export default function AdminPage() {
                   <div key={v.id} className={"border-b border-gray-50 last:border-0 " + (s === "pending" ? "bg-yellow-50/50" : "")}>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-10 h-10 bg-[#0a2a1f]/10 rounded-xl flex items-center justify-center font-bold text-[#0a2a1f] flex-shrink-0">{v.shop_name?.[0]?.toUpperCase()}</div>
+                        <div className="w-10 h-10 bg-[#2B3090]/10 rounded-xl flex items-center justify-center font-bold text-[#2B3090] flex-shrink-0">{v.shop_name?.[0]?.toUpperCase()}</div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap"><p className="font-bold text-gray-800 text-sm">{v.shop_name}</p><Badge status={s} /></div>
                           <div className="flex items-center gap-3 mt-0.5 flex-wrap">
