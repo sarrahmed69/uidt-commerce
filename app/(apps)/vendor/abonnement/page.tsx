@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -208,8 +208,8 @@ export default function AbonnementPage() {
           {/* Bouton payer */}
           {showPayBtn && !showWave && status !== "pending" && (
             <button onClick={() => setShowWave(true)}
-              className="w-full bg-[#0070E0] hover:bg-blue-700 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-colors text-base shadow-sm">
-              <span className="text-xl">🌊</span> Payer avec Wave — {fmt(PRICE)} FCFA
+              className="w-full bg-[#0070E0] hover:bg-[#005bb5] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-colors text-base shadow-sm">
+              <svg width="28" height="28" viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="28" fill="#29ABE2"/><ellipse cx="28" cy="36" rx="12" ry="14" fill="white"/><ellipse cx="28" cy="34" rx="8" ry="11" fill="#1a1a2e"/><ellipse cx="28" cy="37" rx="6" ry="7" fill="white"/><path d="M20 18 Q24 13 28 18 Q32 13 36 18" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round"/><circle cx="23" cy="25" r="2" fill="white"/><circle cx="33" cy="25" r="2" fill="white"/><path d="M22 42 Q28 46 34 42" stroke="#FF6600" strokeWidth="2.5" fill="none" strokeLinecap="round"/></svg> Payer avec Wave — {fmt(PRICE)} FCFA
             </button>
           )}
 
@@ -230,7 +230,7 @@ export default function AbonnementPage() {
                   <p className="text-sm font-semibold text-gray-800 mb-2">Effectuez le paiement Wave</p>
                   <a href={WAVE_URL} target="_blank" rel="noopener noreferrer"
                     className="w-full bg-[#0070E0] hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors">
-                    <span className="text-lg">🌊</span> Ouvrir Wave — {fmt(PRICE)} FCFA
+                    <svg width="22" height="22" viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="28" fill="#29ABE2"/><ellipse cx="28" cy="36" rx="12" ry="14" fill="white"/><ellipse cx="28" cy="34" rx="8" ry="11" fill="#1a1a2e"/><ellipse cx="28" cy="37" rx="6" ry="7" fill="white"/><path d="M20 18 Q24 13 28 18 Q32 13 36 18" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round"/><circle cx="23" cy="25" r="2" fill="white"/><circle cx="33" cy="25" r="2" fill="white"/><path d="M22 42 Q28 46 34 42" stroke="#FF6600" strokeWidth="2.5" fill="none" strokeLinecap="round"/></svg> Ouvrir Wave — {fmt(PRICE)} FCFA
                   </a>
                 </div>
               </div>
