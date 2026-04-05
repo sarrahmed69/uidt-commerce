@@ -1,3 +1,4 @@
+$bytes = [System.Text.Encoding]::UTF8.GetBytes(@'
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -7,7 +8,7 @@ import { TbBuildingStore, TbStar, TbPhone, TbBrandWhatsapp, TbPackage, TbArrowLe
 
 const fmt = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
 
-export default function VendeurDetailPage({ params }: { params: { id: string } }) {
+export default function VendeurDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [vendor, setVendor] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,14 +16,15 @@ export default function VendeurDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     (async () => {
       const supabase = createClient();
-      const { data: v } = await supabase.from("vendors").select("*").eq("id", params.id).maybeSingle();
+      const { id } = await params;
+      const { data: v } = await supabase.from("vendors").select("*").eq("id", id).maybeSingle();
       if (!v) { setLoading(false); return; }
       const { data: p } = await supabase.from("products").select("id,name,price,images,category,stock").eq("vendor_id", v.id).eq("status","active").order("created_at",{ascending:false});
       setVendor(v);
       setProducts(p || []);
       setLoading(false);
     })();
-  }, [params.id]);
+  }, []);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><TbLoader2 className="animate-spin text-primary" size={36} /></div>;
   if (!vendor) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><TbBuildingStore className="text-gray-300" size={60} /><p className="text-gray-500">Boutique introuvable</p><Link href="/vendeurs" className="text-primary underline text-sm">Retour aux vendeurs</Link></div>;
@@ -85,3 +87,6 @@ export default function VendeurDetailPage({ params }: { params: { id: string } }
     </div>
   );
 }
+'@)
+[System.IO.File]::WriteAllBytes((Join-Path $PWD 'app\(apps)\(public)\vendeurs\[id]\page.tsx'), $bytes)
+Write-Host "OK!" -ForegroundColor Green
