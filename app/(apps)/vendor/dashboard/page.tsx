@@ -112,7 +112,7 @@ export default function VendorDashboard() {
   const resetCreate = () => { setNewName(""); setNewPhone(""); setNewBatiment(""); setNewChambre(""); };
   const resetEdit = () => { setEditName(""); setEditPhone(""); setEditBatiment(""); setEditChambre(""); };
 
-  const createBoutique = async () => {
+  const createBoutique = async () => { if (isSuspended) return;
     if (!newName.trim()) return;
     setCreating(true);
     const rawPhone = newPhone.replace(/\D/g, "");
