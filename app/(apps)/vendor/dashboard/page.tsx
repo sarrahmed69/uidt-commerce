@@ -17,7 +17,7 @@ function BoutiqueModal({ title, subtitle, values, onChangeName, onChangePhone, o
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden">
-        <div className="bg-[#0a2a1f] p-6">
+        <div className="bg-[#2B3090] p-6">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-bold text-white text-lg">{title}</h3>
             <button onClick={onClose} className="text-white/60 hover:text-white"><TbX size={20} /></button>
@@ -45,7 +45,7 @@ function BoutiqueModal({ title, subtitle, values, onChangeName, onChangePhone, o
           </div>
           <div className="flex gap-3 pt-1">
             <button onClick={onClose} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm text-gray-500 hover:bg-gray-50">Annuler</button>
-            <button onClick={onSave} disabled={saving || !values.shop_name.trim()} className="flex-1 bg-[#0a2a1f] text-white py-3 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={onSave} disabled={saving || !values.shop_name.trim()} className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
               {saving && <TbLoader2 size={16} className="animate-spin" />}{saveLabel}
             </button>
           </div>
@@ -176,7 +176,7 @@ export default function VendorDashboard() {
           <h1 className="text-2xl font-bold text-gray-900">Bonjour, {firstName} !</h1>
           <p className="text-sm text-gray-500 mt-0.5">{boutiques.length} boutique{boutiques.length > 1 ? "s" : ""} · {totalProduits} produit{totalProduits > 1 ? "s" : ""}</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="bg-[#0a2a1f] text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 self-start sm:self-auto">
+        <button onClick={() => setShowCreate(true)} className="bg-[#2B3090] text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-[#1e2570] self-start sm:self-auto">
           <TbPlus size={18} /> Nouvelle boutique
         </button>
       </div>
@@ -199,14 +199,14 @@ export default function VendorDashboard() {
           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"><TbBuildingStore className="text-primary" size={40} /></div>
           <h3 className="text-lg font-bold text-gray-700 mb-2">Creez votre premiere boutique</h3>
           <p className="text-gray-400 text-sm mb-6">Ajoutez vos produits et commencez a vendre sur le campus.</p>
-          <button onClick={() => setShowCreate(true)} className="bg-[#0a2a1f] text-white px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 hover:opacity-90"><TbPlus size={18} /> Creer ma boutique</button>
+          <button onClick={() => setShowCreate(true)} className="bg-[#2B3090] text-white px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-[#1e2570]"><TbPlus size={18} /> Creer ma boutique</button>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: "Produits", value: totalProduits, icon: TbPackage, color: "bg-blue-50 text-blue-500" },
-              { label: "Boutiques", value: boutiques.length, icon: TbBuildingStore, color: "bg-[#0a2a1f]/10 text-[#0a2a1f]" },
+              { label: "Boutiques", value: boutiques.length, icon: TbBuildingStore, color: "bg-[#2B3090]/10 text-[#2B3090]" },
               { label: "Commandes", value: totalOrders, icon: TbShoppingBag, color: "bg-orange-50 text-orange-500" },
               { label: "Avis", value: 0, icon: TbStar, color: "bg-yellow-50 text-yellow-500" },
             ].map(s => (
@@ -228,7 +228,7 @@ export default function VendorDashboard() {
               const isSelected = selectedId === b.id;
               return (
                 <div key={b.id} className={"flex items-center gap-3 px-5 py-4 border-b border-gray-50 last:border-0 transition-colors " + (isSelected ? "bg-primary/5" : "hover:bg-gray-50")}>
-                  <button onClick={() => selectBoutique(b.id)} className={"w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0 transition-colors " + (isSelected ? "bg-[#0a2a1f] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+                  <button onClick={() => selectBoutique(b.id)} className={"w-11 h-11 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0 transition-colors " + (isSelected ? "bg-[#2B3090] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
                     {b.shop_name[0].toUpperCase()}
                   </button>
                   <div className="flex-1 min-w-0 cursor-pointer" onClick={() => selectBoutique(b.id)}>
@@ -257,7 +257,7 @@ export default function VendorDashboard() {
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-50"><h2 className="font-bold text-gray-800">Actions rapides</h2></div>
             {[
-              { label: "Ajouter un produit", sub: isSuspended ? "Abonnement requis" : selected ? "Dans : " + selected.shop_name : "Selectionner une boutique", href: isSuspended ? "/vendor/abonnement" : "/vendor/produits/nouveau", icon: isSuspended ? TbLock : TbPlus, color: isSuspended ? "bg-red-100 text-red-400" : "bg-[#0a2a1f] text-white" },
+              { label: "Ajouter un produit", sub: isSuspended ? "Abonnement requis" : selected ? "Dans : " + selected.shop_name : "Selectionner une boutique", href: isSuspended ? "/vendor/abonnement" : "/vendor/produits/nouveau", icon: isSuspended ? TbLock : TbPlus, color: isSuspended ? "bg-red-100 text-red-400" : "bg-[#2B3090] text-white" },
               { label: "Mes produits", sub: totalProduits + " produit" + (totalProduits > 1 ? "s" : "") + " au total", href: "/vendor/produits", icon: TbPackage, color: "bg-blue-50 text-blue-500" },
               { label: "Abonnement", sub: isSubscribed ? "Abonnement actif" : "1 000 FCFA / mois", href: "/vendor/abonnement", icon: TbCreditCard, color: isSubscribed ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-500" },
             ].map((item, i) => (

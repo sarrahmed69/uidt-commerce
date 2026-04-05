@@ -7,7 +7,7 @@ import { ProgressBarProviders } from "@/providers/progress-bar-provider";
 import { Zoom, ToastContainer } from "react-toastify";
 
 export const viewport: Viewport = {
-  themeColor: "#0a2a1f",
+  themeColor: "#2B3090",
 };
 
 export const metadata: Metadata = {

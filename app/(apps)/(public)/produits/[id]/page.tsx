@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useParams, useRouter } from "next/navigation";
@@ -129,14 +129,14 @@ export default function ProduitDetail() {
                   Le stock sera mis a jour quand le vendeur confirme votre commande.
                 </div>
                 <button onClick={() => { setShowModal(false); setSuccess(false); setForm({ nom: "", phone: "", message: "" }); }}
-                  className="w-full bg-[#0a2a1f] text-white py-3.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
+                  className="w-full bg-[#2B3090] text-white py-3.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
                   Fermer
                 </button>
               </div>
             ) : (
               <>
                 {/* Header modal */}
-                <div className="bg-[#0a2a1f] px-6 pt-6 pb-6">
+                <div className="bg-[#2B3090] px-6 pt-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
                       <TbShoppingBag className="text-white" size={22} />
@@ -204,7 +204,7 @@ export default function ProduitDetail() {
                     </button>
                     <button onClick={handleCommander}
                       disabled={!form.nom.trim() || !form.phone.trim() || sending}
-                      className="flex-1 bg-[#0a2a1f] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-40">
+                      className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-40">
                       {sending
                         ? <TbLoader2 size={16} className="animate-spin" />
                         : <TbShoppingBag size={16} />}
@@ -290,7 +290,7 @@ export default function ProduitDetail() {
 
           {product.vendors?.shop_name && (
             <div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#0a2a1f]/10 rounded-xl flex items-center justify-center font-bold text-[#0a2a1f]">
+              <div className="w-10 h-10 bg-[#2B3090]/10 rounded-xl flex items-center justify-center font-bold text-[#2B3090]">
                 {product.vendors.shop_name[0].toUpperCase()}
               </div>
               <div>
@@ -330,7 +330,7 @@ export default function ProduitDetail() {
               </div>
             ) : (
               <button onClick={() => setShowModal(true)}
-                className="w-full bg-[#0a2a1f] hover:opacity-90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-opacity text-base">
+                className="w-full bg-[#2B3090] hover:opacity-90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-opacity text-base">
                 <TbShoppingBag size={22} /> Commander — {formatPrice(product.price * qty)}
               </button>
             )}

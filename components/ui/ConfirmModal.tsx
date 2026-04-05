@@ -28,7 +28,7 @@ export default function ConfirmModal({ message, subMessage, confirmLabel = "Conf
           <button onClick={onCancel} className="flex-1 border border-gray-200 py-3 rounded-2xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
             {cancelLabel}
           </button>
-          <button onClick={onConfirm} className={"flex-1 py-3 rounded-2xl text-sm font-bold text-white transition-colors " + (danger ? "bg-red-500 hover:bg-red-600" : "bg-[#0a2a1f] hover:opacity-90")}>
+          <button onClick={onConfirm} className={"flex-1 py-3 rounded-2xl text-sm font-bold text-white transition-colors " + (danger ? "bg-red-500 hover:bg-red-600" : "bg-[#2B3090] hover:bg-[#1e2570]")}>
             {confirmLabel}
           </button>
         </div>

@@ -75,7 +75,7 @@ export default function AbonnementPage() {
     <div className="max-w-lg mx-auto text-center py-16 space-y-4">
       <TbAlertCircle className="text-gray-300 mx-auto" size={48} />
       <p className="text-gray-500 font-medium">Vous n&apos;avez pas encore de boutique.</p>
-      <Link href="/vendor/dashboard" className="inline-flex items-center gap-2 bg-[#0a2a1f] text-white px-5 py-2.5 rounded-xl text-sm font-semibold">
+      <Link href="/vendor/dashboard" className="inline-flex items-center gap-2 bg-[#2B3090] text-white px-5 py-2.5 rounded-xl text-sm font-semibold">
         <TbArrowLeft size={16} /> Retour
       </Link>
     </div>
@@ -131,7 +131,7 @@ export default function AbonnementPage() {
             return (
               <button key={b.id} onClick={() => selectVendor(b)}
                 className={"w-full flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 text-left transition-colors " + (sel ? "bg-primary/5" : "hover:bg-gray-50")}>
-                <div className={"w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm " + (sel ? "bg-[#0a2a1f] text-white" : "bg-gray-100 text-gray-600")}>
+                <div className={"w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm " + (sel ? "bg-[#2B3090] text-white" : "bg-gray-100 text-gray-600")}>
                   {b.shop_name[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -182,7 +182,7 @@ export default function AbonnementPage() {
           )}
 
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-[#0a2a1f] p-6 text-white">
+            <div className="bg-[#2B3090] p-6 text-white">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-white/70">Abonnement mensuel</p>
                 <span className="bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">1er mois GRATUIT</span>
@@ -291,7 +291,7 @@ export default function AbonnementPage() {
               <p className="font-bold text-green-800">Merci ! Activation en cours</p>
               <p className="text-green-600 text-xs">Notre equipe verifie votre paiement Wave et active votre boutique sous 24h.</p>
               <Link href="/vendor/dashboard"
-                className="inline-flex items-center gap-2 bg-[#0a2a1f] text-white px-5 py-2.5 rounded-xl text-sm font-semibold mt-2">
+                className="inline-flex items-center gap-2 bg-[#2B3090] text-white px-5 py-2.5 rounded-xl text-sm font-semibold mt-2">
                 Retour au tableau de bord
               </Link>
             </div>

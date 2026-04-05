@@ -72,7 +72,7 @@ export default function MesProduits() {
             <TbLock size={18} /> Renouveler l abonnement
           </Link>
         ) : (
-          <Link href="/vendor/produits/nouveau" className="bg-[#0a2a1f] text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity self-start sm:self-auto">
+          <Link href="/vendor/produits/nouveau" className="bg-[#2B3090] text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-[#1e2570] transition-opacity self-start sm:self-auto">
             <TbPlus size={18} /> Nouveau produit
           </Link>
         )}
@@ -107,7 +107,7 @@ export default function MesProduits() {
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><TbPackage className="text-gray-400" size={40} /></div>
           <h3 className="text-lg font-bold text-gray-700 mb-2">Aucun produit pour l instant</h3>
           <p className="text-gray-400 text-sm mb-6">Ajoutez votre premier produit pour commencer a vendre.</p>
-          {!suspended && <Link href="/vendor/produits/nouveau" className="bg-[#0a2a1f] text-white px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 hover:opacity-90"><TbPlus size={18} /> Ajouter mon premier produit</Link>}
+          {!suspended && <Link href="/vendor/produits/nouveau" className="bg-[#2B3090] text-white px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 hover:bg-[#1e2570]"><TbPlus size={18} /> Ajouter mon premier produit</Link>}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-400"><TbSearch size={36} className="mx-auto mb-2" /><p>Aucun produit trouve pour "{search}"</p></div>
