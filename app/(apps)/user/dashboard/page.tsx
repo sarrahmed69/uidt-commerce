@@ -28,7 +28,6 @@ export default function UserDashboard() {
         .from("vendors")
         .select("id")
         .eq("user_id", user.id)
-        .eq("status", "active")
         .limit(1);
       if (vendors && vendors.length > 0) setIsVendor(true);
 
