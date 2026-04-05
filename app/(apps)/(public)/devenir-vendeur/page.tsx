@@ -14,7 +14,7 @@ export default function DevenirVendeurPage() {
   const router = useRouter();
   const [form, setForm] = useState({ nom: "", email: "", telephone: "", password: "" });
 
-  const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
   const handleSubmit = async () => {
     setError(null);
