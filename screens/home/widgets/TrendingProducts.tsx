@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -37,7 +37,7 @@ function Card({ p }: { p: any }) {
       </div>
       <div className="p-3">
         <p className="font-semibold text-gray-800 text-sm truncate">{p.name}</p>
-        <p className="text-[#2B3090] font-bold text-sm mt-1">{fmt(p.price)}</p>
+        {p.promo_price && p.promo_ends_at && new Date(p.promo_ends_at) > new Date() ? (<div className="mt-1"><div className="flex items-center gap-1.5"><p className="text-red-500 font-bold text-sm">{fmt(p.promo_price)}</p><p className="text-gray-400 text-xs line-through">{fmt(p.price)}</p><span className="bg-red-100 text-red-500 text-[9px] font-black px-1.5 py-0.5 rounded-full">-{Math.round((1-p.promo_price/p.price)*100)}%</span></div></div>) : (<p className="text-[#2B3090] font-bold text-sm mt-1">{fmt(p.price)}</p>)}
         {p.stock != null && p.stock <= 3 && p.stock > 0 && (
           <p className="text-orange-500 text-[10px] font-semibold mt-0.5">Plus que {p.stock} en stock !</p>
         )}
@@ -56,8 +56,8 @@ export default function TrendingProducts() {
     (async () => {
       const supabase = createClient();
       const [{ data: r }, { data: p }] = await Promise.all([
-        supabase.from("products").select("id,name,price,category,images,stock").eq("status","active").order("created_at",{ascending:false}).limit(8),
-        supabase.from("products").select("id,name,price,category,images,stock").eq("status","active").order("views",{ascending:false}).limit(8),
+        supabase.from("products").select("id,name,price,category,images,stock,promo_price,promo_ends_at").eq("status","active").order("created_at",{ascending:false}).limit(8),
+        supabase.from("products").select("id,name,price,category,images,stock,promo_price,promo_ends_at").eq("status","active").order("views",{ascending:false}).limit(8),
       ]);
       setRecent(r || []);
       setPopular(p || []);

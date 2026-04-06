@@ -110,16 +110,13 @@ export default function ProduitDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (!sending) { setShowModal(false); setSuccess(false); }}} />
           <div className="relative bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
             {success ? (
               <div className="p-8 text-center space-y-4">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                  <TbCheck className="text-green-600" size={40} />
-                </div>
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto"><TbCheck className="text-green-600" size={40} /></div>
                 <h3 className="font-bold text-gray-900 text-xl">Commande envoyee !</h3>
                 <p className="text-gray-500 text-sm">Votre commande a ete enregistree. Le vendeur va la confirmer sous peu.</p>
                 <button onClick={() => { setShowModal(false); setSuccess(false); setForm({ nom: "", phone: "", message: "" }); }}
@@ -129,12 +126,8 @@ export default function ProduitDetail() {
               <>
                 <div className="bg-[#2B3090] px-6 pt-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                      <TbShoppingBag className="text-white" size={22} />
-                    </div>
-                    <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/70 hover:bg-white/20">
-                      <TbX size={16} />
-                    </button>
+                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center"><TbShoppingBag className="text-white" size={22} /></div>
+                    <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/70 hover:bg-white/20"><TbX size={16} /></button>
                   </div>
                   <h3 className="text-white font-bold text-xl">Passer une commande</h3>
                   <p className="text-white/60 text-sm mt-1">Remplissez vos informations pour commander</p>
@@ -181,16 +174,15 @@ export default function ProduitDetail() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3 sticky top-0 z-10">
         <button onClick={() => router.back()} className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors">
           <TbArrowLeft size={20} />
         </button>
         <h1 className="font-bold text-gray-800 truncate flex-1">{product.name}</h1>
-        <button onClick={handleShare} className={"w-9 h-9 rounded-xl flex items-center justify-center transition-colors " + (shared ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+        <button onClick={handleShare} title={shared ? "Lien copie !" : "Partager"} className={"w-9 h-9 rounded-xl flex items-center justify-center transition-colors " + (shared ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
           {shared ? <TbCheck size={18} /> : <TbShare size={18} />}
         </button>
-        <button onClick={toggleLike} className={"w-9 h-9 rounded-xl flex items-center justify-center transition-colors " + (liked ? "bg-red-100 text-red-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+        <button onClick={toggleLike} title={liked ? "Retirer des favoris" : "Ajouter aux favoris"} className={"w-9 h-9 rounded-xl flex items-center justify-center transition-colors " + (liked ? "bg-red-100 text-red-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
           <TbHeart size={18} className={liked ? "fill-red-500 text-red-500" : ""} />
         </button>
       </div>
