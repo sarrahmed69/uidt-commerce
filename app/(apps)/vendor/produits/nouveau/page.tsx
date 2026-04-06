@@ -53,26 +53,23 @@ export default function NouveauProduitPage() {
     if (!form.nom) { alert("Entrez d'abord le nom du produit !"); return; }
     setAiLoading(true);
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      let imageBase64 = null;
+      let imageType = null;
+      if (files[0]) {
+        const reader = new FileReader();
+        imageBase64 = await new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve((e.target?.result as string).split(",")[1]);
+          reader.readAsDataURL(files[0]);
+        });
+        imageType = files[0].type;
+      }
+      const response = await fetch("/api/generate-description", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: `Tu es un expert en marketing pour une marketplace d'etudiants au Senegal (UIDT Commerce). 
-Genere une description courte et attractive (2-3 phrases max, 100 mots max) pour ce produit :
-- Nom : ${form.nom}
-- Categorie : ${form.categorie || "Non definie"}
-- Prix : ${form.prix ? form.prix + " FCFA" : "Non defini"}
-La description doit etre en francais, simple, engageante et adaptee aux etudiants. Ne mets pas de titre, juste la description directement.`
-          }]
-        })
+        body: JSON.stringify({ nom: form.nom, imageBase64, imageType }),
       });
       const data = await response.json();
-      const text = data.content?.[0]?.text || "";
-      if (text) set("description", text.trim());
+      if (data.description) set("description", data.description);
     } catch (e) {
       alert("Erreur IA. Reessayez !");
     }
