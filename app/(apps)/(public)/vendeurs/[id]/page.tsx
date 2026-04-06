@@ -127,41 +127,7 @@ export default function VendeurDetailPage() {
           )}
         </div>
 
-        {/* Section Avis */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
-          <h2 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2">
-            <TbMessageCircle className="text-primary" size={22} /> Avis clients
-            {reviews.length > 0 && <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-0.5 rounded-full ml-1">{avgRating} ★</span>}
-          </h2>
 
-          {reviews.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <TbStar className="text-gray-200" size={40} />
-              <p className="text-gray-400 mt-2 text-sm">Aucun avis pour le moment</p>
-              <p className="text-gray-300 text-xs mt-1">Les avis apparaissent apres livraison d une commande</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {reviews.map(r => (
-                <div key={r.id} className="border border-gray-100 rounded-2xl p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 bg-[#2B3090]/10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-[#2B3090] text-sm">
-                      {r.buyer_name?.[0]?.toUpperCase() || "?"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <p className="font-semibold text-gray-800 text-sm">{r.buyer_name}</p>
-                        <p className="text-gray-400 text-xs">{new Date(r.created_at).toLocaleDateString("fr-FR")}</p>
-                      </div>
-                      <StarRow rating={r.rating} size={13} />
-                      {r.comment && <p className="text-sm text-gray-600 mt-2 leading-relaxed">{r.comment}</p>}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </MainLayout>
     </div>
   );
