@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   TbArrowLeft, TbPackage, TbLoader2,
   TbTruck, TbTag, TbMinus, TbPlus, TbCheck, TbX,
-  TbShoppingBag, TbAlertCircle,
+  TbShoppingBag, TbAlertCircle, TbShare, TbHeart,
 } from "react-icons/tb";
 
 const formatPrice = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
@@ -22,6 +22,8 @@ export default function ProduitDetail() {
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [form, setForm] = useState({ nom: "", phone: "", message: "" });
+  const [liked, setLiked] = useState(false);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -32,29 +34,43 @@ export default function ProduitDetail() {
       setLoading(false);
     };
     load();
+    const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+    setLiked(favs.includes(id));
   }, [id]);
 
-  const getPrice = (p: any) =>
-    p?.promo_price && p?.promo_ends_at && new Date(p.promo_ends_at) > new Date()
-      ? p.promo_price
-      : p?.price ?? 0;
+  const getPrice = (p: any) => p?.promo_price && p?.promo_ends_at && new Date(p.promo_ends_at) > new Date() ? p.promo_price : p?.price;
 
-  const isPromo = (p: any) =>
-    p?.promo_price && p?.promo_ends_at && new Date(p.promo_ends_at) > new Date();
+  const toggleLike = () => {
+    const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
+    const newFavs = liked ? favs.filter((f: string) => f !== id) : [...favs, id];
+    localStorage.setItem("favorites", JSON.stringify(newFavs));
+    setLiked(!liked);
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: product?.name, text: "Regardez ce produit sur UIDT Commerce !", url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    }
+  };
 
   const handleCommander = async () => {
     if (!form.nom.trim() || !form.phone.trim()) return;
     setSending(true);
     try {
       const supabase = createClient();
-      const unitPrice = getPrice(product);
+      const finalPrice = getPrice(product);
       const { error } = await supabase.from("orders").insert([{
         vendor_id: product.vendor_id,
         buyer_name: form.nom.trim(),
         buyer_whatsapp: form.phone.trim(),
         whatsapp: form.phone.trim(),
-        items: [{ id: product.id, name: product.name, price: unitPrice, qty, image: product.images?.[0] || "" }],
-        total: unitPrice * qty,
+        items: [{ id: product.id, name: product.name, price: finalPrice, qty, image: product.images?.[0] || "" }],
+        total: finalPrice * qty,
         message: form.message.trim() || null,
         status: "pending",
       }]);
@@ -65,7 +81,7 @@ export default function ProduitDetail() {
           "Bonjour ! J'ai passe une commande sur UIDT Commerce.\n\n" +
           "Produit : " + product.name + "\n" +
           "Quantite : " + qty + "\n" +
-          "Total : " + formatPrice(unitPrice * qty) + "\n\n" +
+          "Total : " + formatPrice(finalPrice * qty) + "\n\n" +
           "Mon nom : " + form.nom + "\n" +
           "Mon tel : " + form.phone +
           (form.message ? "\n\nMessage : " + form.message : "") +
@@ -89,7 +105,8 @@ export default function ProduitDetail() {
 
   const images = product.images || [];
   const outOfStock = product.stock !== null && product.stock <= 0;
-  const unitPrice = getPrice(product);
+  const finalPrice = getPrice(product);
+  const isPromo = product.promo_price && product.promo_ends_at && new Date(product.promo_ends_at) > new Date();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,13 +122,8 @@ export default function ProduitDetail() {
                 </div>
                 <h3 className="font-bold text-gray-900 text-xl">Commande envoyee !</h3>
                 <p className="text-gray-500 text-sm">Votre commande a ete enregistree. Le vendeur va la confirmer sous peu.</p>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-3 text-xs text-yellow-700">
-                  Le stock sera mis a jour quand le vendeur confirme votre commande.
-                </div>
                 <button onClick={() => { setShowModal(false); setSuccess(false); setForm({ nom: "", phone: "", message: "" }); }}
-                  className="w-full bg-[#2B3090] text-white py-3.5 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
-                  Fermer
-                </button>
+                  className="w-full bg-[#2B3090] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#1e2570]">Fermer</button>
               </div>
             ) : (
               <>
@@ -120,8 +132,7 @@ export default function ProduitDetail() {
                     <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
                       <TbShoppingBag className="text-white" size={22} />
                     </div>
-                    <button onClick={() => setShowModal(false)}
-                      className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/70 hover:bg-white/20 transition-colors">
+                    <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/70 hover:bg-white/20">
                       <TbX size={16} />
                     </button>
                   </div>
@@ -133,9 +144,9 @@ export default function ProduitDetail() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-semibold text-sm truncate">{product.name}</p>
-                      <p className="text-white/60 text-xs">x{qty} · {formatPrice(unitPrice * qty)}</p>
+                      <p className="text-white/60 text-xs">x{qty} · {formatPrice(finalPrice * qty)}</p>
                     </div>
-                    <p className="text-white font-bold text-sm flex-shrink-0">{formatPrice(unitPrice * qty)}</p>
+                    <p className="text-white font-bold text-sm flex-shrink-0">{formatPrice(finalPrice * qty)}</p>
                   </div>
                 </div>
                 <div className="px-6 py-5 space-y-4">
@@ -152,16 +163,12 @@ export default function ProduitDetail() {
                   <div>
                     <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Message (optionnel)</label>
                     <textarea className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
-                      placeholder="Ex: Livraison au batiment B7 chambre 204..." rows={2}
-                      value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
+                      placeholder="Ex: Livraison au batiment B7 chambre 204..." rows={2} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
                   </div>
                   <div className="flex gap-3 pt-1">
-                    <button onClick={() => setShowModal(false)}
-                      className="flex-1 border border-gray-200 py-3 rounded-xl text-sm text-gray-500 font-medium hover:bg-gray-50 transition-colors">
-                      Annuler
-                    </button>
+                    <button onClick={() => setShowModal(false)} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm text-gray-500 font-medium hover:bg-gray-50">Annuler</button>
                     <button onClick={handleCommander} disabled={!form.nom.trim() || !form.phone.trim() || sending}
-                      className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-40">
+                      className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40">
                       {sending ? <TbLoader2 size={16} className="animate-spin" /> : <TbShoppingBag size={16} />}
                       {sending ? "Envoi..." : "Commander"}
                     </button>
@@ -174,23 +181,30 @@ export default function ProduitDetail() {
         </div>
       )}
 
+      {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 py-4 flex items-center gap-3 sticky top-0 z-10">
         <button onClick={() => router.back()} className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors">
           <TbArrowLeft size={20} />
         </button>
-        <h1 className="font-bold text-gray-800 truncate">{product.name}</h1>
+        <h1 className="font-bold text-gray-800 truncate flex-1">{product.name}</h1>
+        <button onClick={handleShare} className={"w-9 h-9 rounded-xl flex items-center justify-center transition-colors " + (shared ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+          {shared ? <TbCheck size={18} /> : <TbShare size={18} />}
+        </button>
+        <button onClick={toggleLike} className={"w-9 h-9 rounded-xl flex items-center justify-center transition-colors " + (liked ? "bg-red-100 text-red-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>
+          <TbHeart size={18} className={liked ? "fill-red-500 text-red-500" : ""} />
+        </button>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <div className="bg-white rounded-2xl overflow-hidden aspect-square flex items-center justify-center shadow-sm mb-3">
+          <div className="bg-white rounded-2xl overflow-hidden aspect-square flex items-center justify-center shadow-sm mb-3 relative">
             {images[imgIdx] ? <img src={images[imgIdx]} alt={product.name} className="w-full h-full object-cover" /> : <TbPackage className="text-gray-200" size={80} />}
+            {isPromo && <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-black px-2.5 py-1 rounded-full">PROMO -{Math.round((1-finalPrice/product.price)*100)}%</span>}
           </div>
           {images.length > 1 && (
             <div className="flex gap-2">
               {images.map((img: string, i: number) => (
-                <button key={i} onClick={() => setImgIdx(i)}
-                  className={"w-16 h-16 rounded-xl overflow-hidden border-2 transition-colors " + (i === imgIdx ? "border-primary" : "border-transparent")}>
+                <button key={i} onClick={() => setImgIdx(i)} className={"w-16 h-16 rounded-xl overflow-hidden border-2 transition-colors " + (i === imgIdx ? "border-primary" : "border-transparent")}>
                   <img src={img} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
@@ -206,34 +220,28 @@ export default function ProduitDetail() {
               </span>
             )}
             <h2 className="text-2xl font-bold text-gray-900 mt-2">{product.name}</h2>
-
-            {isPromo(product) ? (
+            {isPromo ? (
               <div className="mt-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-0.5">
                   <span className="bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-full">PROMO</span>
                   <span className="text-xs text-gray-400">Fin le {new Date(product.promo_ends_at).toLocaleDateString("fr-FR")}</span>
                 </div>
-                <div className="flex items-center gap-3 mt-1">
-                  <p className="text-3xl font-bold text-red-500">{formatPrice(product.promo_price)}</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-3xl font-bold text-red-500">{formatPrice(finalPrice)}</p>
                   <p className="text-lg text-gray-400 line-through">{formatPrice(product.price)}</p>
-                  <span className="bg-red-100 text-red-600 text-xs font-black px-2 py-1 rounded-lg">-{Math.round((1 - product.promo_price / product.price) * 100)}%</span>
+                  <span className="bg-red-100 text-red-600 text-xs font-black px-2 py-1 rounded-lg">-{Math.round((1-finalPrice/product.price)*100)}%</span>
                 </div>
               </div>
             ) : (
               <p className="text-3xl font-bold text-primary mt-2">{formatPrice(product.price)}</p>
             )}
-
             {product.stock !== null && (
               <div className={"flex items-center gap-1.5 mt-2 text-sm font-medium " + (outOfStock ? "text-red-500" : product.stock <= 3 ? "text-orange-500" : "text-gray-400")}>
-                {outOfStock ? <><TbAlertCircle size={15} /> Rupture de stock</>
-                  : product.stock <= 3 ? <><TbAlertCircle size={15} /> Plus que {product.stock} en stock</>
-                  : <>{product.stock} en stock</>}
+                {outOfStock ? <><TbAlertCircle size={15} /> Rupture de stock</> : product.stock <= 3 ? <><TbAlertCircle size={15} /> Plus que {product.stock} en stock</> : <>{product.stock} en stock</>}
               </div>
             )}
             {product.delivery_available && (
-              <div className="flex items-center gap-2 mt-2 text-green-600 text-sm">
-                <TbTruck size={16} /><span>Livraison campus disponible</span>
-              </div>
+              <div className="flex items-center gap-2 mt-2 text-green-600 text-sm"><TbTruck size={16} /><span>Livraison campus disponible</span></div>
             )}
           </div>
 
@@ -245,17 +253,15 @@ export default function ProduitDetail() {
           )}
 
           {product.vendors?.shop_name && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#2B3090]/10 rounded-xl flex items-center justify-center font-bold text-[#2B3090] overflow-hidden">
-                {product.vendors.logo_url
-                  ? <img src={product.vendors.logo_url} alt="" className="w-full h-full object-cover" />
-                  : product.vendors.shop_name[0].toUpperCase()}
+            <Link href={"/vendeurs/" + product.vendors.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
+              <div className="w-10 h-10 bg-[#2B3090]/10 rounded-xl overflow-hidden flex items-center justify-center font-bold text-[#2B3090] flex-shrink-0">
+                {product.vendors.logo_url ? <img src={product.vendors.logo_url} alt="" className="w-full h-full object-cover" /> : product.vendors.shop_name[0].toUpperCase()}
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-800">{product.vendors.shop_name}</p>
-                <p className="text-xs text-gray-400 flex items-center gap-1"><TbCheck size={11} className="text-green-500" /> Vendeur verifie</p>
+                <p className="text-xs text-gray-400 flex items-center gap-1"><TbCheck size={11} className="text-green-500" /> Vendeur verifie · Voir la boutique</p>
               </div>
-            </div>
+            </Link>
           )}
 
           <div className="bg-white rounded-2xl p-5 shadow-sm space-y-4">
@@ -267,25 +273,21 @@ export default function ProduitDetail() {
                 <button onClick={() => setQty(q => Math.min(product.stock || 99, q + 1))} disabled={outOfStock} className="text-gray-500 hover:text-primary transition-colors disabled:opacity-30"><TbPlus size={16} /></button>
               </div>
             </div>
-
             {qty > 1 && (
               <div className="flex justify-between text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-2.5">
                 <span>Total ({qty} articles)</span>
-                <span className="font-bold text-gray-800">{formatPrice(unitPrice * qty)}</span>
+                <span className="font-bold text-gray-800">{formatPrice(finalPrice * qty)}</span>
               </div>
             )}
-
             {outOfStock ? (
               <div className="w-full bg-gray-100 text-gray-400 font-bold py-4 rounded-xl flex items-center justify-center gap-2 text-base cursor-not-allowed">
                 <TbAlertCircle size={20} /> Rupture de stock
               </div>
             ) : (
-              <button onClick={() => setShowModal(true)}
-                className="w-full bg-[#2B3090] hover:opacity-90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-opacity text-base">
-                <TbShoppingBag size={22} /> Commander — {formatPrice(unitPrice * qty)}
+              <button onClick={() => setShowModal(true)} className="w-full bg-[#2B3090] hover:bg-[#1e2570] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-colors text-base">
+                <TbShoppingBag size={22} /> Commander — {formatPrice(finalPrice * qty)}
               </button>
             )}
-
             <p className="text-xs text-center text-gray-400">Le vendeur confirmera votre commande et vous contactera</p>
           </div>
         </div>
