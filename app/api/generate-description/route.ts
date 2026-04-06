@@ -36,6 +36,7 @@ La description doit etre en francais, simple, engageante et adaptee aux etudiant
   });
 
   const data = await response.json();
+  console.log("Anthropic response:", JSON.stringify(data));
   const text = data.content?.[0]?.text || "";
-  return NextResponse.json({ description: text.trim() });
+  return NextResponse.json({ description: text.trim(), debug: data });
 }
