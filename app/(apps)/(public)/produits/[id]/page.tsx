@@ -7,9 +7,32 @@ import {
   TbArrowLeft, TbPackage, TbLoader2,
   TbTruck, TbTag, TbMinus, TbPlus, TbCheck, TbX,
   TbShoppingBag, TbAlertCircle, TbShare, TbHeart,
+  TbStar, TbStarFilled, TbMessageCircle, TbSend,
 } from "react-icons/tb";
 
 const formatPrice = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
+
+const StarPicker = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => (
+  <div className="flex gap-1">
+    {[1,2,3,4,5].map(s => (
+      <button key={s} onClick={() => onChange(s)} type="button">
+        {s <= value
+          ? <TbStarFilled size={28} className="text-yellow-400" />
+          : <TbStar size={28} className="text-gray-300 hover:text-yellow-300 transition-colors" />}
+      </button>
+    ))}
+  </div>
+);
+
+const StarRow = ({ rating, size = 14 }: { rating: number; size?: number }) => (
+  <div className="flex items-center gap-0.5">
+    {[1,2,3,4,5].map(s => (
+      s <= Math.round(rating)
+        ? <TbStarFilled key={s} size={size} className="text-yellow-400" />
+        : <TbStar key={s} size={size} className="text-gray-200" />
+    ))}
+  </div>
+);
 
 export default function ProduitDetail() {
   const { id } = useParams();
@@ -25,18 +48,51 @@ export default function ProduitDetail() {
   const [liked, setLiked] = useState(false);
   const [shared, setShared] = useState(false);
 
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
+  const [reviewSending, setReviewSending] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+
   useEffect(() => {
     const load = async () => {
       const supabase = createClient();
       const { data } = await supabase.from("products").select("*, vendors(id, shop_name, wave_number, logo_url)").eq("id", id).single();
       setProduct(data);
       if (data) await supabase.from("products").update({ views: (data.views || 0) + 1 }).eq("id", id as string);
+      const { data: revs } = await supabase.from("reviews").select("*").eq("product_id", id).order("created_at", { ascending: false });
+      setReviews(revs || []);
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id || null);
       setLoading(false);
     };
     load();
     const favs = JSON.parse(localStorage.getItem("favorites") || "[]");
     setLiked(favs.includes(id));
   }, [id]);
+
+  const avgRating = reviews.length > 0 ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;
+
+  const handleReview = async () => {
+    setReviewError("");
+    if (!userId) { setReviewError("Connectez-vous pour laisser un avis."); return; }
+    if (reviewForm.rating === 0) { setReviewError("Choisissez une note."); return; }
+    setReviewSending(true);
+    const supabase = createClient();
+    const already = reviews.find(r => r.user_id === userId);
+    if (already) { setReviewError("Vous avez deja laisse un avis pour ce produit."); setReviewSending(false); return; }
+    const { error } = await supabase.from("reviews").insert({
+      product_id: id, user_id: userId, rating: reviewForm.rating, comment: reviewForm.comment.trim() || null,
+    });
+    if (error) { setReviewError("Erreur. Reessayez."); setReviewSending(false); return; }
+    const { data: revs } = await supabase.from("reviews").select("*").eq("product_id", id).order("created_at", { ascending: false });
+    setReviews(revs || []);
+    setReviewForm({ rating: 0, comment: "" });
+    setReviewSuccess(true);
+    setTimeout(() => setReviewSuccess(false), 3000);
+    setReviewSending(false);
+  };
 
   const getPrice = (p: any) => p?.promo_price && p?.promo_ends_at && new Date(p.promo_ends_at) > new Date() ? p.promo_price : p?.price;
 
@@ -212,6 +268,12 @@ export default function ProduitDetail() {
               </span>
             )}
             <h2 className="text-2xl font-bold text-gray-900 mt-2">{product.name}</h2>
+            {reviews.length > 0 && (
+              <div className="flex items-center gap-2 mt-1">
+                <StarRow rating={avgRating} />
+                <span className="text-xs text-gray-500">{avgRating}/5 · {reviews.length} avis</span>
+              </div>
+            )}
             {isPromo ? (
               <div className="mt-2">
                 <div className="flex items-center gap-2 mb-0.5">
@@ -283,6 +345,64 @@ export default function ProduitDetail() {
             <p className="text-xs text-center text-gray-400">Le vendeur confirmera votre commande et vous contactera</p>
           </div>
         </div>
+      </div>
+
+      {/* Section Avis */}
+      <div className="max-w-4xl mx-auto px-4 pb-10 space-y-4">
+
+        {/* Laisser un avis */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2">
+            <TbMessageCircle className="text-primary" size={22} /> Laisser un avis
+          </h3>
+          {reviewSuccess ? (
+            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+              <TbCheck className="text-green-600" size={20} />
+              <p className="text-green-700 font-semibold text-sm">Merci pour votre avis !</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Votre note</p>
+                <StarPicker value={reviewForm.rating} onChange={v => setReviewForm(f => ({ ...f, rating: v }))} />
+              </div>
+              <textarea
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
+                placeholder="Partagez votre experience avec ce produit... (optionnel)"
+                rows={3}
+                value={reviewForm.comment}
+                onChange={e => setReviewForm(f => ({ ...f, comment: e.target.value }))}
+              />
+              {reviewError && <p className="text-red-500 text-xs">{reviewError}</p>}
+              <button onClick={handleReview} disabled={reviewSending || reviewForm.rating === 0}
+                className="flex items-center gap-2 bg-[#2B3090] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#1e2570] transition-colors disabled:opacity-40">
+                {reviewSending ? <TbLoader2 size={16} className="animate-spin" /> : <TbSend size={16} />}
+                {reviewSending ? "Envoi..." : "Publier mon avis"}
+              </button>
+              {!userId && <p className="text-xs text-gray-400">Connectez-vous pour laisser un avis.</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Liste des avis */}
+        {reviews.length > 0 && (
+          <div className="bg-white rounded-2xl p-6 shadow-sm">
+            <h3 className="font-bold text-gray-800 text-lg mb-2 flex items-center gap-2">
+              <TbStarFilled className="text-yellow-400" size={20} /> {reviews.length} Avis · {avgRating}/5
+            </h3>
+            <div className="space-y-4 mt-4">
+              {reviews.map((r, i) => (
+                <div key={r.id || i} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <StarRow rating={r.rating} />
+                    <span className="text-xs text-gray-400">{new Date(r.created_at).toLocaleDateString("fr-FR")}</span>
+                  </div>
+                  {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
