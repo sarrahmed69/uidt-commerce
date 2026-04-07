@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import MainLayout from "@/components/common/layouts/main/MainLayout";
 import Link from "next/link";
-import { TbBuildingStore, TbStar, TbStarFilled, TbPhone, TbBrandWhatsapp, TbPackage, TbArrowLeft, TbCheck, TbMapPin, TbLoader2, TbMessageCircle } from "react-icons/tb";
+import { TbBuildingStore, TbStar, TbStarFilled, TbPhone, TbBrandWhatsapp, TbPackage, TbArrowLeft, TbCheck, TbMapPin, TbLoader2, TbMessageCircle, TbShare, TbShieldCheck } from "react-icons/tb";
 
 const fmt = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
 
@@ -12,6 +12,7 @@ export default function VendeurDetailPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const id = window.location.pathname.split("/").pop();
@@ -31,6 +32,17 @@ export default function VendeurDetailPage() {
     })();
   }, []);
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: vendor?.shop_name, text: "Decouvrez cette boutique sur UIDT Commerce", url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center"><TbLoader2 className="animate-spin text-primary" size={36} /></div>;
   if (!vendor) return <div className="min-h-screen flex flex-col items-center justify-center gap-4"><TbBuildingStore className="text-gray-300" size={60} /><p className="text-gray-500">Boutique introuvable</p><Link href="/vendeurs" className="text-primary underline text-sm">Retour aux vendeurs</Link></div>;
 
@@ -38,7 +50,6 @@ export default function VendeurDetailPage() {
   const phone = vendor.wave_number || vendor.whatsapp || "";
   const avgRating = reviews.length > 0 ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;
   const isPromo = (p: any) => p.promo_price && p.promo_ends_at && new Date(p.promo_ends_at) > new Date();
-  const getPrice = (p: any) => isPromo(p) ? p.promo_price : p.price;
 
   const StarRow = ({ rating, size = 15 }: { rating: number; size?: number }) => (
     <div className="flex items-center gap-0.5">
@@ -65,16 +76,17 @@ export default function VendeurDetailPage() {
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h1 className="text-2xl font-bold text-gray-900">{vendor.shop_name}</h1>
-                {vendor.is_verified && <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full flex items-center gap-1"><TbCheck size={12} /> Verifie</span>}
+                {vendor.is_verified && (
+                  <span className="bg-blue-50 text-blue-600 border border-blue-200 text-xs px-2.5 py-1 rounded-full flex items-center gap-1 font-semibold">
+                    <TbShieldCheck size={13} /> Vendeur verifie
+                  </span>
+                )}
               </div>
 
-              {/* Vraies etoiles */}
               <div className="flex items-center gap-2 mb-2">
                 <StarRow rating={avgRating} />
                 {reviews.length > 0 ? (
-                  <span className="text-gray-500 text-xs">
-                    {avgRating}/5 · {reviews.length} avis
-                  </span>
+                  <span className="text-gray-500 text-xs">{avgRating}/5 · {reviews.length} avis</span>
                 ) : (
                   <span className="text-gray-400 text-xs">Aucun avis pour l instant</span>
                 )}
@@ -87,12 +99,18 @@ export default function VendeurDetailPage() {
               </div>
               {vendor.description && <p className="text-sm text-gray-500 mt-2">{vendor.description}</p>}
             </div>
-            {phone && (
-              <div className="flex gap-2 flex-shrink-0">
-                <a href={"https://wa.me/"+phone.replace(/\D/g,"")} target="_blank" className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"><TbBrandWhatsapp size={18} /> WhatsApp</a>
-                <a href={"tel:+221"+phone} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"><TbPhone size={18} /> Appeler</a>
-              </div>
-            )}
+
+            <div className="flex gap-2 flex-shrink-0 flex-wrap">
+              {phone && (
+                <>
+                  <a href={"https://wa.me/"+phone.replace(/\D/g,"")} target="_blank" className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"><TbBrandWhatsapp size={18} /> WhatsApp</a>
+                  <a href={"tel:+221"+phone} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"><TbPhone size={18} /> Appeler</a>
+                </>
+              )}
+              <button onClick={handleShare} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors">
+                {copied ? <><TbCheck size={18} className="text-green-600" /> Copie !</> : <><TbShare size={18} /> Partager</>}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -126,8 +144,6 @@ export default function VendeurDetailPage() {
             </div>
           )}
         </div>
-
-
       </MainLayout>
     </div>
   );

@@ -41,8 +41,6 @@ const Hero = () => {
   const [q, setQ] = useState("");
   const [stats, setStats] = useState([
     { value: "...", label: "Produits" },
-    { value: "...", label: "Vendeurs" },
-    { value: "...", label: "Etudiants" },
     { value: "100%", label: "Campus UIDT" },
   ]);
 
@@ -56,8 +54,6 @@ const Hero = () => {
       ]);
       setStats([
         { value: produits ? `${produits}` : "0", label: "Produits" },
-        { value: vendeurs ? `${vendeurs}` : "0", label: "Vendeurs" },
-        { value: users ? `${users}+` : "0", label: "Etudiants" },
         { value: "100%", label: "Campus UIDT" },
       ]);
     };
