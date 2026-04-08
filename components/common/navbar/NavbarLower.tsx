@@ -1,10 +1,9 @@
-"use client"
+﻿"use client"
 import { useEffect, useRef, useState, useCallback } from "react";
 import MainLayout from "../layouts/main/MainLayout";
 import navItems from "./navbaritems";
 import NavbarLogo from "./NavbarLogo";
 import NavItems from "./NavItems";
-import NavbarSearch from "./NavbarSearch";
 import NavbarLeft from "./NavbarLeft";
 import NavbarMobile from "./NavbarMobile";
 import NavCategoryDropDown from "./NavCategoryDropDown";
@@ -99,14 +98,6 @@ const NavbarLower: React.FC = () => {
           </NavbarMobile>
         )}
 
-        <NavbarSearch
-          searching={searching}
-          setSearching={setSearching}
-          isMobile={isMobile}
-          handleSearchValueChange={handleSearchValueChange}
-          searchValue={searchValue || ""}
-          handleSearchRedirect={handleSearchRedirect}
-        />
         <NavbarLeft
           isMobile={isMobile}
           setSearching={setSearching}
