@@ -1,4 +1,5 @@
 "use client";
+import StoryUpload from "@/components/stories/StoryUpload";
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -172,6 +173,16 @@ export default function VendorDashboard() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Story rapide */}
+      {selected && (
+        <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4">
+          <StoryUpload vendorId={selected.id} vendorName={selected.shop_name} />
+          <div>
+            <p className="font-semibold text-gray-800 text-sm">Ajouter une story</p>
+            <p className="text-xs text-gray-400">Visible 24h par tous les clients</p>
+          </div>
+        </div>
+      )}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Bonjour, {firstName} !</h1>
           <p className="text-sm text-gray-500 mt-0.5">{boutiques.length} boutique{boutiques.length > 1 ? "s" : ""} · {totalProduits} produit{totalProduits > 1 ? "s" : ""}</p>
