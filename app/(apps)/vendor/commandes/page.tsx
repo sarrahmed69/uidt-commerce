@@ -147,7 +147,7 @@ export default function VendorCommandes() {
 
   if (loading) return (
     <div className="flex justify-center py-24">
-      <TbLoader2 className="text-[#2d5a1b] animate-spin" size={36} />
+      <TbLoader2 className="text-[#2B3090] animate-spin" size={36} />
     </div>
   );
 
@@ -156,7 +156,7 @@ export default function VendorCommandes() {
 
       {/* Alerte nouvelle commande */}
       {newAlert && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#2d5a1b] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#2B3090] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
           <TbBell size={18} /> Nouvelle commande recue !
         </div>
       )}
@@ -184,7 +184,7 @@ export default function VendorCommandes() {
       <div className="relative">
         <TbSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un client, adresse..."
-          className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2d5a1b]/20 focus:border-[#2d5a1b]" />
+          className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20 focus:border-[#2B3090]" />
       </div>
 
       {/* Filtres */}
@@ -192,7 +192,7 @@ export default function VendorCommandes() {
         {FILTERS.map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={"flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all " +
-              (filter === f ? "bg-[#2d5a1b] text-white shadow-sm" : "bg-white border border-gray-200 text-gray-500 hover:border-gray-300")}>
+              (filter === f ? "bg-[#2B3090] text-white shadow-sm" : "bg-white border border-gray-200 text-gray-500 hover:border-gray-300")}>
             {f}
             {f === "En attente" && pendingCount > 0 && (
               <span className="ml-1.5 bg-red-500 text-white text-[9px] px-1 py-0.5 rounded-full">{pendingCount}</span>
@@ -226,8 +226,8 @@ export default function VendorCommandes() {
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-[#2d5a1b]/10 rounded-xl flex items-center justify-center">
-                      <TbUser className="text-[#2d5a1b]" size={18} />
+                    <div className="w-9 h-9 bg-[#2B3090]/10 rounded-xl flex items-center justify-center">
+                      <TbUser className="text-[#2B3090]" size={18} />
                     </div>
                     <div>
                       <p className="font-bold text-gray-800 text-sm">{order.buyer_name}</p>
@@ -238,7 +238,7 @@ export default function VendorCommandes() {
                     <span className={"flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold " + st.color}>
                       <Icon size={11} /> {st.label}
                     </span>
-                    <p className="font-bold text-[#2d5a1b] text-sm">{fmt(order.total_price || order.total || 0)}</p>
+                    <p className="font-bold text-[#2B3090] text-sm">{fmt(order.total_price || order.total || 0)}</p>
                   </div>
                 </div>
 
@@ -277,7 +277,7 @@ export default function VendorCommandes() {
                 <div className="flex items-center gap-2 px-5 py-3 border-t border-gray-50 flex-wrap">
                   {order.buyer_phone && (
                     <a href={"https://wa.me/" + order.buyer_phone.replace(/\D/g, "")} target="_blank"
-                      className="flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90">
+                      className="flex items-center gap-1.5 bg-[#2B3090] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90">
                       <TbBrandWhatsapp size={16} /> Contacter
                     </a>
                   )}
@@ -289,7 +289,7 @@ export default function VendorCommandes() {
                   )}
                   {order.status === "confirmed" && (
                     <button onClick={() => updateStatus(order.id, "delivered")} disabled={updating === order.id}
-                      className="flex items-center gap-1.5 bg-[#2d5a1b] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90 disabled:opacity-60">
+                      className="flex items-center gap-1.5 bg-[#2B3090] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90 disabled:opacity-60">
                       {updating === order.id ? <TbLoader2 size={14} className="animate-spin" /> : <TbPackage size={14} />} Marquer livree
                     </button>
                   )}

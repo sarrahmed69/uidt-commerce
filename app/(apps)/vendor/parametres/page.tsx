@@ -84,7 +84,7 @@ export default function VendorParametres() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><TbLoader2 className="animate-spin text-[#2d5a1b]" size={36} /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><TbLoader2 className="animate-spin text-[#2B3090]" size={36} /></div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,11 +104,11 @@ export default function VendorParametres() {
           {/* Logo */}
           <div className="bg-white rounded-2xl p-6 shadow-sm">
             <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
-              <TbPhoto className="text-[#2d5a1b]" size={20} /> Logo de la boutique
+              <TbPhoto className="text-[#2B3090]" size={20} /> Logo de la boutique
             </h2>
             <div className="flex items-center gap-5">
               <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 border-2 border-dashed border-gray-200 flex items-center justify-center flex-shrink-0">
-                {logoUploading ? <TbLoader2 className="animate-spin text-[#2d5a1b]" size={28} /> :
+                {logoUploading ? <TbLoader2 className="animate-spin text-[#2B3090]" size={28} /> :
                   logoUrl ? (
                     <>
                       <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
@@ -123,7 +123,7 @@ export default function VendorParametres() {
                 <p className="text-xs text-gray-400 mb-3">JPG, PNG ou WEBP. Recommande : 200x200px</p>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadLogo(f); }} />
                 <button onClick={() => fileRef.current?.click()} disabled={logoUploading}
-                  className="flex items-center gap-2 bg-[#2d5a1b] text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-[#1a3d10] transition-colors disabled:opacity-50">
+                  className="flex items-center gap-2 bg-[#2B3090] text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-[#1a3d10] transition-colors disabled:opacity-50">
                   <TbUpload size={15} /> {logoUrl ? "Changer le logo" : "Ajouter un logo"}
                 </button>
               </div>
@@ -133,7 +133,7 @@ export default function VendorParametres() {
           {/* Infos boutique */}
           <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
             <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-              <TbUser className="text-[#2d5a1b]" size={20} /> Informations de la boutique
+              <TbUser className="text-[#2B3090]" size={20} /> Informations de la boutique
             </h2>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">Email</label>
@@ -141,19 +141,19 @@ export default function VendorParametres() {
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">Nom de la boutique</label>
-              <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2d5a1b]/20 focus:border-[#2d5a1b]"
+              <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20 focus:border-[#2B3090]"
                 placeholder="Ma boutique campus" value={form.shopName} onChange={e => setForm(f => ({...f, shopName: e.target.value}))} />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 block">Description</label>
-              <textarea rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2d5a1b]/20 focus:border-[#2d5a1b] resize-none"
+              <textarea rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20 focus:border-[#2B3090] resize-none"
                 placeholder="Decrivez votre boutique..." value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1">
                 <TbBrandWhatsapp size={15} className="text-green-500" /> Numero WhatsApp / Wave
               </label>
-              <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2d5a1b]/20 focus:border-[#2d5a1b]"
+              <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20 focus:border-[#2B3090]"
                 placeholder="771234567" value={form.wave_number} onChange={e => setForm(f => ({...f, wave_number: e.target.value}))} />
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function VendorParametres() {
           <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-                <TbClock className="text-[#2d5a1b]" size={20} /> Horaires de livraison
+                <TbClock className="text-[#2B3090]" size={20} /> Horaires de livraison
               </h2>
               <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-medium">Optionnel</span>
             </div>
@@ -174,7 +174,7 @@ export default function VendorParametres() {
               <div className="flex flex-wrap gap-2">
                 {JOURS.map(jour => (
                   <button key={jour} onClick={() => toggleDay(jour)}
-                    className={"px-3 py-2 rounded-xl text-xs font-bold transition-all " + (deliveryDays.includes(jour) ? "bg-[#2d5a1b] text-white shadow-md" : "bg-gray-100 text-gray-500 hover:bg-gray-200")}>
+                    className={"px-3 py-2 rounded-xl text-xs font-bold transition-all " + (deliveryDays.includes(jour) ? "bg-[#2B3090] text-white shadow-md" : "bg-gray-100 text-gray-500 hover:bg-gray-200")}>
                     {jour.slice(0, 3)}
                   </button>
                 ))}
@@ -190,21 +190,21 @@ export default function VendorParametres() {
                     <label className="text-xs text-gray-400 mb-1 block">De</label>
                     <input type="time" value={deliveryHours.start}
                       onChange={e => setDeliveryHours(h => ({ ...h, start: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#2d5a1b]/20 focus:border-[#2d5a1b]" />
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20 focus:border-[#2B3090]" />
                   </div>
                   <div className="text-gray-400 mt-4">→</div>
                   <div className="flex-1">
                     <label className="text-xs text-gray-400 mb-1 block">A</label>
                     <input type="time" value={deliveryHours.end}
                       onChange={e => setDeliveryHours(h => ({ ...h, end: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#2d5a1b]/20 focus:border-[#2d5a1b]" />
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20 focus:border-[#2B3090]" />
                   </div>
                 </div>
 
                 {/* Apercu */}
-                <div className="mt-3 bg-[#2d5a1b]/5 border border-[#2d5a1b]/20 rounded-xl px-4 py-3">
+                <div className="mt-3 bg-[#2B3090]/5 border border-[#2B3090]/20 rounded-xl px-4 py-3">
                   <p className="text-xs text-gray-500 font-medium">Apercu pour les clients :</p>
-                  <p className="text-sm text-[#2d5a1b] font-bold mt-1">
+                  <p className="text-sm text-[#2B3090] font-bold mt-1">
                     {deliveryDays.map(d => d.slice(0, 3)).join(", ")} · {deliveryHours.start} - {deliveryHours.end}
                   </p>
                 </div>
@@ -219,7 +219,7 @@ export default function VendorParametres() {
           </div>
 
           <button onClick={save} disabled={saving}
-            className="w-full bg-[#2d5a1b] text-white font-bold py-4 rounded-xl hover:bg-[#1a3d10] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg">
+            className="w-full bg-[#2B3090] text-white font-bold py-4 rounded-xl hover:bg-[#1a3d10] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg">
             {saving ? <><TbLoader2 size={20} className="animate-spin" /> Enregistrement...</> :
               saved ? <><TbCheck size={20} /> Enregistre !</> : "Enregistrer les modifications"}
           </button>

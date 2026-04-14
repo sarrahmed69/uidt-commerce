@@ -41,7 +41,7 @@ export default function UserCommandesPage() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#fafaf8]">
-      <TbLoader2 className="animate-spin text-[#2d5a1b]" size={36} />
+      <TbLoader2 className="animate-spin text-[#2B3090]" size={36} />
     </div>
   );
 
@@ -65,7 +65,7 @@ export default function UserCommandesPage() {
             </div>
             <p className="font-bold text-gray-800">Aucune commande</p>
             <p className="text-gray-400 text-sm text-center">Vous n avez pas encore passe de commande</p>
-            <Link href="/produits" className="bg-[#2d5a1b] text-white px-5 py-2.5 rounded-xl text-sm font-bold">
+            <Link href="/produits" className="bg-[#2B3090] text-white px-5 py-2.5 rounded-xl text-sm font-bold">
               Voir les produits
             </Link>
           </div>
@@ -94,7 +94,7 @@ export default function UserCommandesPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-900 text-sm truncate">{product?.name || "Produit"}</p>
                     <p className="text-xs text-gray-400 mt-0.5">Qte : {order.quantity || 1}</p>
-                    <p className="text-[#2d5a1b] font-bold text-sm mt-0.5">{fmt(order.total_price || 0)}</p>
+                    <p className="text-[#2B3090] font-bold text-sm mt-0.5">{fmt(order.total_price || 0)}</p>
                   </div>
                 </div>
 
@@ -109,13 +109,13 @@ export default function UserCommandesPage() {
                 <div className="flex items-center gap-2 px-4 pb-4">
                   {order.tracking_token && (
                     <Link href={"/suivi/" + order.tracking_token}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-[#2d5a1b] text-white text-xs font-bold py-2.5 rounded-xl active:scale-95">
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-[#2B3090] text-white text-xs font-bold py-2.5 rounded-xl active:scale-95">
                       <TbExternalLink size={14} /> Suivre la commande
                     </Link>
                   )}
                   {order.whatsapp && (
                     <a href={"https://wa.me/" + order.whatsapp.replace(/\D/g, "")} target="_blank"
-                      className="flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-bold px-3 py-2.5 rounded-xl active:scale-95">
+                      className="flex items-center gap-1.5 bg-[#2B3090] text-white text-xs font-bold px-3 py-2.5 rounded-xl active:scale-95">
                       <TbBrandWhatsapp size={14} />
                     </a>
                   )}
