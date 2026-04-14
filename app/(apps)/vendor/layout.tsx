@@ -85,7 +85,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       ? "flex flex-col h-full"
       : "w-64 bg-white border-r border-gray-100 fixed h-full hidden lg:flex flex-col z-20"}>
       <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-10 h-10 bg-[#2B3090] rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-[#4a7c2f] rounded-xl flex items-center justify-center flex-shrink-0">
           <TbBuildingStore className="text-white" size={20} />
         </div>
         <div className="min-w-0 flex-1">
@@ -101,7 +101,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
             <Link key={item.href} href={item.href}
               onClick={() => { setOpen(false); if (isCommandes) markAsRead(); }}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors relative ${
-                active ? "bg-[#2B3090] text-white font-medium" : "text-gray-600 hover:bg-gray-50"
+                active ? "bg-[#4a7c2f] text-white font-medium" : "text-gray-600 hover:bg-gray-50"
               }`}>
               <item.icon size={18} className="flex-shrink-0" />
               {item.label}
@@ -131,7 +131,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-gray-50">
       <div className="lg:hidden bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#2B3090] rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-[#4a7c2f] rounded-lg flex items-center justify-center">
             <TbBuildingStore className="text-white" size={16} />
           </div>
           <span className="font-bold text-gray-800 text-sm truncate max-w-[150px]">{shopName}</span>

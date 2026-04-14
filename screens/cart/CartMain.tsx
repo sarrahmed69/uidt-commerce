@@ -47,7 +47,12 @@ export default function CartMain() {
         await supabase.from("orders").insert({
           vendor_id: vendorId,
           buyer_id: user?.id || null,
-          buyer_name: nom || user?.user_metadata?.firstName || user?.email?.split("@")[0] || "Invite",
+          product_id: vendorItems[0]?.id || null,
+          buyer_name: nom || user?.user_metadata?.first_name || user?.email?.split("@")[0] || "Invite",
+          delivery_address: adresse || null,
+          buyer_phone: telephone || null,
+          total_price: orderTotal,
+          quantity: vendorItems.reduce((s: number, i: any) => s + i.qty, 0),
           items: vendorItems.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty, image: i.image })),
           total: orderTotal,
           message: message || null,
