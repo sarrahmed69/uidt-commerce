@@ -6,7 +6,6 @@ import Link from "next/link";
 import { TbCheck, TbClock, TbPackage, TbTruck, TbLoader2, TbArrowLeft, TbBrandWhatsapp } from "react-icons/tb";
 
 const fmt = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
-
 const STEPS = [
   { key: "pending", label: "Commande recue", desc: "Votre commande a ete envoyee au vendeur", icon: TbClock },
   { key: "confirmed", label: "Confirmee", desc: "Le vendeur a confirme votre commande", icon: TbCheck },
@@ -38,44 +37,29 @@ export default function SuiviPage() {
     })();
   }, [token]);
 
-  const getCurrentStep = () => {
-    if (order?.status === "delivered") return 2;
-    if (order?.status === "confirmed") return 1;
-    return 0;
-  };
+  const step = order?.status === "delivered" ? 2 : order?.status === "confirmed" ? 1 : 0;
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F7F8FD]">
-      <TbLoader2 className="animate-spin text-[#2B3090]" size={36} />
-    </div>
-  );
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#F7F8FD]"><TbLoader2 className="animate-spin text-[#2B3090]" size={36} /></div>;
 
   if (!order) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F7F8FD] p-6">
-      <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center">
-        <TbPackage className="text-gray-300" size={40} />
-      </div>
+      <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center"><TbPackage className="text-gray-300" size={40} /></div>
       <p className="font-bold text-gray-800">Commande introuvable</p>
       <p className="text-gray-400 text-sm text-center">Ce lien de suivi est invalide ou a expire</p>
       <Link href="/" className="bg-[#2B3090] text-white px-5 py-2.5 rounded-xl text-sm font-bold">Retour accueil</Link>
     </div>
   );
 
-  const step = getCurrentStep();
   const waPhone = vendor?.wave_number?.replace(/\D/g, "");
-
   return (
     <div className="min-h-screen bg-[#F7F8FD]">
       <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
-        <Link href="/" className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center">
-          <TbArrowLeft size={18} />
-        </Link>
+        <Link href="/" className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center"><TbArrowLeft size={18} /></Link>
         <div>
           <p className="font-bold text-gray-900 text-sm">Suivi de commande</p>
           <p className="text-xs text-gray-400">#{(token as string)?.slice(0, 8).toUpperCase()}</p>
         </div>
       </div>
-
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
         <div className={"rounded-2xl p-5 text-center border " + (step === 2 ? "bg-emerald-50 border-emerald-200" : step === 1 ? "bg-blue-50 border-blue-200" : "bg-amber-50 border-amber-200")}>
           <div className={"w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 " + (step === 2 ? "bg-emerald-100" : step === 1 ? "bg-blue-100" : "bg-amber-100")}>
@@ -84,7 +68,6 @@ export default function SuiviPage() {
           <p className="font-extrabold text-gray-900 text-lg">{STEPS[step].label}</p>
           <p className="text-sm text-gray-500 mt-1">{STEPS[step].desc}</p>
         </div>
-
         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
           <h3 className="font-bold text-gray-900 text-sm mb-5">Progression</h3>
           {STEPS.map((s, i) => {
@@ -105,7 +88,6 @@ export default function SuiviPage() {
             );
           })}
         </div>
-
         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
           <h3 className="font-bold text-gray-900 text-sm">Details de la commande</h3>
           {product && (
@@ -126,7 +108,6 @@ export default function SuiviPage() {
             <div className="flex justify-between"><span className="text-gray-400">Date</span><span className="font-semibold text-gray-800">{new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span></div>
           </div>
         </div>
-
         {vendor && (
           <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -139,8 +120,7 @@ export default function SuiviPage() {
               </div>
             </div>
             {waPhone && (
-              <a href={"https://wa.me/" + waPhone} target="_blank"
-                className="bg-[#25D366] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
+              <a href={"https://wa.me/" + waPhone} target="_blank" className="bg-[#25D366] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
                 <TbBrandWhatsapp size={16} /> Contacter
               </a>
             )}
