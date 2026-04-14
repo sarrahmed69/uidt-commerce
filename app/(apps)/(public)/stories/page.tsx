@@ -4,27 +4,27 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
   TbX, TbBuildingStore, TbShoppingBag, TbHeart,
-  TbShare, TbChevronUp, TbChevronDown, TbVolume,
-  TbVolumeOff, TbLoader2, TbStar,
+  TbShare, TbChevronLeft, TbChevronRight,
+  TbVolume, TbVolumeOff, TbLoader2, TbStar,
+  TbArrowLeft, TbPhoto,
 } from "react-icons/tb";
 
 const fmt = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
 
 export default function StoriesPage() {
-  const [vendors, setVendors] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeVendor, setActiveVendor] = useState<number>(0);
-  const [activeStory, setActiveStory] = useState<number>(0);
-  const [progress, setProgress] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
-  const [fullscreen, setFullscreen] = useState(false);
+  const [vendors, setVendors]           = useState<any[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [activeVendor, setActiveVendor] = useState(0);
+  const [activeStory, setActiveStory]   = useState(0);
+  const [progress, setProgress]         = useState(0);
+  const [paused, setPaused]             = useState(false);
+  const [muted, setMuted]               = useState(true);
+  const [liked, setLiked]               = useState<Record<string, boolean>>({});
+  const [viewer, setViewer]             = useState(false);
   const [showProducts, setShowProducts] = useState(false);
-  const progressRef = useRef<any>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const DURATION = 7000;
+  const timerRef  = useRef<any>(null);
+  const videoRef  = useRef<HTMLVideoElement>(null);
+  const DURATION  = 7000;
 
   useEffect(() => {
     (async () => {
@@ -34,21 +34,17 @@ export default function StoriesPage() {
         .select("*, vendors(id, shop_name, logo_url, rating, is_verified)")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
-
-      if (!allStories) { setLoading(false); return; }
+      if (!allStories?.length) { setLoading(false); return; }
       const map: Record<string, any> = {};
       for (const s of allStories) {
         const vid = s.vendor_id;
         if (!map[vid]) map[vid] = { ...s.vendors, stories: [], products: [] };
         map[vid].stories.push(s);
       }
-
-      // Charger les produits de chaque vendeur
       const supabase2 = createClient();
       for (const v of Object.values(map) as any[]) {
         const { data: prods } = await supabase2.from("products")
-          .select("id, name, price, images, promo_price")
-          .eq("vendor_id", v.id).eq("status", "active").limit(3);
+          .select("id,name,price,images,promo_price").eq("vendor_id", v.id).eq("status","active").limit(4);
         v.products = prods || [];
       }
       setVendors(Object.values(map));
@@ -56,53 +52,62 @@ export default function StoriesPage() {
     })();
   }, []);
 
-  const currentVendor = vendors[activeVendor];
-  const currentStory = currentVendor?.stories?.[activeStory];
+  const cv = vendors[activeVendor];
+  const cs = cv?.stories?.[activeStory];
 
   const goNext = useCallback(() => {
-    if (!currentVendor) return;
-    setProgress(0);
-    if (activeStory < currentVendor.stories.length - 1) {
-      setActiveStory(s => s + 1);
-    } else if (activeVendor < vendors.length - 1) {
-      setActiveVendor(v => v + 1);
-      setActiveStory(0);
-    }
-    setShowProducts(false);
-  }, [activeStory, activeVendor, currentVendor, vendors.length]);
+    setProgress(0); setShowProducts(false);
+    if (!cv) return;
+    if (activeStory < cv.stories.length - 1) { setActiveStory(s => s + 1); }
+    else if (activeVendor < vendors.length - 1) { setActiveVendor(v => v + 1); setActiveStory(0); }
+    else { setViewer(false); }
+  }, [activeStory, activeVendor, cv, vendors.length]);
 
   const goPrev = useCallback(() => {
-    setProgress(0);
-    if (activeStory > 0) {
-      setActiveStory(s => s - 1);
-    } else if (activeVendor > 0) {
-      setActiveVendor(v => v - 1);
-      setActiveStory(0);
-    }
-    setShowProducts(false);
+    setProgress(0); setShowProducts(false);
+    if (activeStory > 0) { setActiveStory(s => s - 1); }
+    else if (activeVendor > 0) { setActiveVendor(v => v - 1); setActiveStory(0); }
   }, [activeStory, activeVendor]);
 
-  // Progression automatique
-  useEffect(() => {
-    if (!fullscreen || paused || !currentStory || currentStory.media_type === "video") return;
-    setProgress(0);
-    clearInterval(progressRef.current);
-    const interval = 50;
-    progressRef.current = setInterval(() => {
-      setProgress(p => {
-        if (p >= 100) { clearInterval(progressRef.current); goNext(); return 0; }
-        return p + (interval / DURATION) * 100;
-      });
-    }, interval);
-    return () => clearInterval(progressRef.current);
-  }, [activeStory, activeVendor, paused, fullscreen, currentStory]);
+  const openViewer = (vi: number, si = 0) => {
+    setActiveVendor(vi); setActiveStory(si);
+    setProgress(0); setShowProducts(false);
+    setViewer(true);
+  };
 
-  // Touch/swipe
-  const touchStart = useRef<number>(0);
-  const handleTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientY; };
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const diff = touchStart.current - e.changedTouches[0].clientY;
-    if (Math.abs(diff) > 50) { diff > 0 ? goNext() : goPrev(); }
+  // Auto-progress
+  useEffect(() => {
+    if (!viewer || paused || !cs || cs.media_type === "video") return;
+    clearInterval(timerRef.current);
+    setProgress(0);
+    const step = 50;
+    timerRef.current = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) { clearInterval(timerRef.current); goNext(); return 0; }
+        return p + (step / DURATION) * 100;
+      });
+    }, step);
+    return () => clearInterval(timerRef.current);
+  }, [activeStory, activeVendor, paused, viewer, cs]);
+
+  const handleLike = async () => {
+    if (!cs) return;
+    const already = liked[cs.id];
+    setLiked(l => ({ ...l, [cs.id]: !already }));
+    const supabase = createClient();
+    await supabase.from("vendor_stories")
+      .update({ likes_count: (cs.likes_count || 0) + (already ? -1 : 1) })
+      .eq("id", cs.id);
+  };
+
+  // Touch swipe
+  const touchY = useRef(0);
+  const touchX = useRef(0);
+  const onTouchStart = (e: React.TouchEvent) => { touchY.current = e.touches[0].clientY; touchX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dy = touchY.current - e.changedTouches[0].clientY;
+    const dx = touchX.current - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) { dx > 0 ? goNext() : goPrev(); }
   };
 
   if (loading) return (
@@ -111,99 +116,122 @@ export default function StoriesPage() {
     </div>
   );
 
-  if (!fullscreen) return (
-    <main className="min-h-screen bg-gray-50">
+  // ── PAGE D'ACCUEIL STORIES ──────────────────────────────────────────
+  if (!viewer) return (
+    <main className="min-h-screen bg-[#F7F8FD]">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-[#2B3090]">Stories</h1>
-        <p className="text-xs text-gray-400 mt-0.5">Découvrez les boutiques du campus</p>
+      <div className="bg-white border-b border-gray-100 px-4 py-4 sticky top-0 z-10 flex items-center gap-3">
+        <Link href="/" className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center">
+          <TbArrowLeft size={18} className="text-gray-600" />
+        </Link>
+        <div>
+          <h1 className="text-lg font-bold text-[#2B3090]">Stories</h1>
+          <p className="text-[11px] text-gray-400">Découvrez les boutiques du campus</p>
+        </div>
       </div>
 
       {vendors.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4 text-gray-400">
-          <TbBuildingStore size={56} className="opacity-20" />
-          <p className="text-sm">Aucune story active pour le moment</p>
+        <div className="flex flex-col items-center justify-center py-32 gap-4 px-6">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center">
+            <TbPhoto size={40} className="text-gray-300" />
+          </div>
+          <p className="font-bold text-gray-700 text-center">Aucune story active</p>
+          <p className="text-gray-400 text-sm text-center">Les vendeurs n'ont pas encore publié de stories</p>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          {/* Bulles stories style Instagram */}
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide mb-8">
-            {vendors.map((v, i) => (
-              <button key={v.id} onClick={() => { setActiveVendor(i); setActiveStory(0); setFullscreen(true); setProgress(0); }}
-                className="flex flex-col items-center gap-1.5 flex-shrink-0 group">
-                <div className="w-[72px] h-[72px] rounded-full p-[2px] bg-gradient-to-tr from-[#F5A623] via-[#2B3090] to-[#F5A623]">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-white border-2 border-white">
-                    {v.logo_url
-                      ? <img src={v.logo_url} className="w-full h-full object-cover" alt={v.shop_name} />
-                      : <div className="w-full h-full bg-[#2B3090]/10 flex items-center justify-center text-[#2B3090] font-bold text-2xl">{v.shop_name?.[0]}</div>}
+        <div className="px-4 py-5 space-y-6">
+          {/* Bulles vendeurs style Instagram */}
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Boutiques actives</p>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+              {vendors.map((v, i) => (
+                <button key={v.id} onClick={() => openViewer(i)}
+                  className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                  <div className="w-[68px] h-[68px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#F5A623] via-[#2B3090] to-[#F5A623]">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white border-2 border-white">
+                      {v.logo_url
+                        ? <img src={v.logo_url} className="w-full h-full object-cover" alt={v.shop_name} />
+                        : <div className="w-full h-full bg-[#2B3090]/10 flex items-center justify-center text-[#2B3090] font-extrabold text-2xl">{v.shop_name?.[0]}</div>}
+                    </div>
                   </div>
-                </div>
-                <span className="text-[10px] text-gray-700 font-semibold max-w-[72px] truncate text-center">{v.shop_name}</span>
-              </button>
-            ))}
+                  <span className="text-[10px] text-gray-700 font-semibold max-w-[68px] truncate">{v.shop_name}</span>
+                  <span className="text-[9px] text-gray-400">{v.stories.length} story{v.stories.length > 1 ? "s" : ""}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Grille TikTok style */}
-          <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Toutes les stories</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {vendors.flatMap((v, vi) =>
-              v.stories.map((s: any, si: number) => (
-                <button key={s.id}
-                  onClick={() => { setActiveVendor(vi); setActiveStory(si); setFullscreen(true); setProgress(0); }}
-                  className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-black group hover:scale-[1.02] transition-all shadow-lg">
-                  {s.media_type === "video"
-                    ? <video src={s.media_url} className="w-full h-full object-cover" muted />
-                    : <img src={s.media_url} className="w-full h-full object-cover" alt="" />}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-                  {/* Vendeur info */}
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-6 h-6 rounded-full overflow-hidden border border-white/50 flex-shrink-0">
+          {/* Grille style TikTok — scroll vertical */}
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Toutes les stories</p>
+            <div className="columns-2 gap-3 space-y-3">
+              {vendors.flatMap((v, vi) =>
+                v.stories.map((s: any, si: number) => (
+                  <button key={s.id} onClick={() => openViewer(vi, si)}
+                    className="relative w-full rounded-2xl overflow-hidden bg-black break-inside-avoid block group">
+                    <div className="aspect-[9/16]">
+                      {s.media_type === "video"
+                        ? <video src={s.media_url} className="w-full h-full object-cover" muted playsInline />
+                        : <img src={s.media_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
+                    {/* Vendeur */}
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                      <div className="w-7 h-7 rounded-full overflow-hidden border border-white/60 flex-shrink-0 bg-[#2B3090]">
                         {v.logo_url
                           ? <img src={v.logo_url} className="w-full h-full object-cover" alt="" />
-                          : <div className="w-full h-full bg-[#2B3090] flex items-center justify-center text-white text-[10px] font-bold">{v.shop_name?.[0]}</div>}
+                          : <span className="text-white text-[10px] font-bold flex items-center justify-center h-full">{v.shop_name?.[0]}</span>}
                       </div>
-                      <span className="text-white text-[11px] font-bold truncate">{v.shop_name}</span>
+                      <span className="text-white text-[10px] font-bold drop-shadow">{v.shop_name}</span>
                     </div>
-                    {s.caption && <p className="text-white/80 text-[10px] truncate">{s.caption}</p>}
-                  </div>
-                  {/* Play icon */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[12px] border-l-white border-b-[6px] border-b-transparent ml-1" />
-                  </div>
-                </button>
-              ))
-            )}
+                    {/* Caption */}
+                    {s.caption && (
+                      <p className="absolute bottom-8 left-2.5 right-2.5 text-white text-[10px] font-medium line-clamp-2 drop-shadow">{s.caption}</p>
+                    )}
+                    {/* Likes */}
+                    <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2 py-0.5">
+                      <TbHeart size={10} className="text-red-400" />
+                      <span className="text-white text-[9px] font-bold">{s.likes_count || 0}</span>
+                    </div>
+                    {/* Play icon video */}
+                    {s.media_type === "video" && (
+                      <div className="absolute bottom-2.5 right-2.5 w-5 h-5 bg-white/30 rounded-full flex items-center justify-center">
+                        <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[7px] border-l-white border-b-[4px] border-b-transparent ml-0.5" />
+                      </div>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         </div>
       )}
     </main>
   );
 
-  // MODE FULLSCREEN TIKTOK
+  // ── VIEWER FULLSCREEN TIKTOK ─────────────────────────────────────────
   return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center"
-      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center overflow-hidden"
+      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
 
-      {/* Story media */}
-      <div className="relative w-full h-full max-w-sm mx-auto"
-        onClick={e => { const x = e.clientX; const w = window.innerWidth; x < w / 2 ? goPrev() : goNext(); }}>
-
-        {currentStory?.media_type === "video" ? (
-          <video ref={videoRef} src={currentStory.media_url} className="w-full h-full object-cover"
-            autoPlay muted={muted} onEnded={goNext}
-            onTimeUpdate={e => { const v = e.currentTarget; setProgress((v.currentTime / v.duration) * 100); }} />
+      <div className="relative w-full h-full max-w-sm mx-auto">
+        {/* Media */}
+        {cs?.media_type === "video" ? (
+          <video ref={videoRef} src={cs.media_url} className="w-full h-full object-cover"
+            autoPlay muted={muted} playsInline
+            onEnded={goNext}
+            onTimeUpdate={e => { const v = e.currentTarget; if (v.duration) setProgress((v.currentTime / v.duration) * 100); }} />
         ) : (
-          <img src={currentStory?.media_url} className="w-full h-full object-cover" alt="" />
+          <img src={cs?.media_url} className="w-full h-full object-cover" alt="" />
         )}
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40 pointer-events-none" />
 
         {/* Progress bars */}
-        <div className="absolute top-3 left-3 right-3 flex gap-1 z-20">
-          {currentVendor?.stories.map((_: any, i: number) => (
-            <div key={i} className="flex-1 h-[2px] rounded-full bg-white/30 overflow-hidden">
+        <div className="absolute top-3 left-3 right-3 flex gap-1 z-30">
+          {cv?.stories.map((_: any, i: number) => (
+            <div key={i} className="flex-1 h-[2.5px] rounded-full bg-white/30 overflow-hidden">
               <div className="h-full bg-white rounded-full transition-none"
                 style={{ width: i < activeStory ? "100%" : i === activeStory ? progress + "%" : "0%" }} />
             </div>
@@ -211,123 +239,146 @@ export default function StoriesPage() {
         </div>
 
         {/* Header vendeur */}
-        <div className="absolute top-8 left-3 right-3 flex items-center gap-2 z-20">
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/80 flex-shrink-0">
-            {currentVendor?.logo_url
-              ? <img src={currentVendor.logo_url} className="w-full h-full object-cover" alt="" />
-              : <div className="w-full h-full bg-[#2B3090] flex items-center justify-center text-white font-bold">{currentVendor?.shop_name?.[0]}</div>}
+        <div className="absolute top-8 left-3 right-3 flex items-center gap-2.5 z-30">
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/80 flex-shrink-0 bg-[#2B3090]">
+            {cv?.logo_url
+              ? <img src={cv.logo_url} className="w-full h-full object-cover" alt="" />
+              : <span className="text-white font-bold flex items-center justify-center h-full">{cv?.shop_name?.[0]}</span>}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1">
-              <p className="text-white font-bold text-sm truncate">{currentVendor?.shop_name}</p>
-              {currentVendor?.is_verified && <TbStar size={12} className="text-[#F5A623] flex-shrink-0" />}
+              <p className="text-white font-bold text-sm truncate">{cv?.shop_name}</p>
+              {cv?.is_verified && <TbStar size={12} className="text-[#F5A623] flex-shrink-0" />}
             </div>
             <p className="text-white/60 text-[10px]">
-              {activeStory + 1}/{currentVendor?.stories.length} · il y a {Math.round((Date.now() - new Date(currentStory?.created_at).getTime()) / 60000)}min
+              {activeStory + 1}/{cv?.stories.length} · {Math.round((Date.now() - new Date(cs?.created_at).getTime()) / 60000)}min
             </p>
           </div>
-          <button onClick={() => setMuted(m => !m)} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white">
-            {muted ? <TbVolumeOff size={16} /> : <TbVolume size={16} />}
+          <button onClick={() => setMuted(m => !m)}
+            className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            {muted ? <TbVolumeOff size={16} className="text-white" /> : <TbVolume size={16} className="text-white" />}
           </button>
-          <button onClick={() => setFullscreen(false)} className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white">
-            <TbX size={16} />
+          <button onClick={() => setViewer(false)}
+            className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            <TbX size={16} className="text-white" />
           </button>
         </div>
 
+        {/* Zones tap gauche / droite */}
+        <div className="absolute inset-0 flex z-20">
+          <div className="w-1/3 h-full cursor-pointer" onClick={goPrev} />
+          <div className="w-1/3 h-full cursor-pointer" onClick={() => setPaused(p => !p)} />
+          <div className="w-1/3 h-full cursor-pointer" onClick={goNext} />
+        </div>
+
+        {/* Navigation vendeurs */}
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-30">
+          {activeVendor > 0 && (
+            <button onClick={e => { e.stopPropagation(); setActiveVendor(v => v - 1); setActiveStory(0); setProgress(0); }}
+              className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <TbChevronLeft size={18} className="text-white" />
+            </button>
+          )}
+        </div>
+        <div className="absolute right-14 top-1/2 -translate-y-1/2 z-30">
+          {activeVendor < vendors.length - 1 && (
+            <button onClick={e => { e.stopPropagation(); setActiveVendor(v => v + 1); setActiveStory(0); setProgress(0); }}
+              className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+              <TbChevronRight size={18} className="text-white" />
+            </button>
+          )}
+        </div>
+
         {/* Caption */}
-        {currentStory?.caption && (
-          <div className="absolute bottom-[180px] left-4 right-16 z-20">
-            <p className="text-white text-sm font-medium drop-shadow-lg">{currentStory.caption}</p>
+        {cs?.caption && !showProducts && (
+          <div className="absolute bottom-[160px] left-4 right-16 z-30">
+            <p className="text-white text-sm font-medium leading-relaxed drop-shadow-lg">{cs.caption}</p>
           </div>
         )}
 
         {/* Actions droite */}
-        <div className="absolute right-3 bottom-[180px] flex flex-col items-center gap-5 z-20">
-          <button onClick={e => { e.stopPropagation(); setLiked(l => ({ ...l, [currentStory?.id]: !l[currentStory?.id] })); }}
-            className="flex flex-col items-center gap-1">
-            <div className={"w-10 h-10 rounded-full flex items-center justify-center " + (liked[currentStory?.id] ? "bg-red-500" : "bg-white/20")}>
-              <TbHeart size={20} className={liked[currentStory?.id] ? "text-white fill-white" : "text-white"} />
+        <div className="absolute right-3 bottom-[160px] flex flex-col items-center gap-5 z-30">
+          <button onClick={handleLike} className="flex flex-col items-center gap-1">
+            <div className={"w-11 h-11 rounded-full flex items-center justify-center shadow-lg " +
+              (liked[cs?.id] ? "bg-red-500" : "bg-white/20 backdrop-blur-sm")}>
+              <TbHeart size={22} className={liked[cs?.id] ? "text-white" : "text-white"} />
             </div>
-            <span className="text-white text-[10px]">{liked[currentStory?.id] ? "Aime" : "J'aime"}</span>
+            <span className="text-white text-[10px] font-semibold">{(cs?.likes_count || 0) + (liked[cs?.id] ? 1 : 0)}</span>
           </button>
           <button onClick={e => { e.stopPropagation(); setShowProducts(p => !p); }}
             className="flex flex-col items-center gap-1">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <TbShoppingBag size={20} className="text-white" />
+            <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+              <TbShoppingBag size={22} className="text-white" />
             </div>
-            <span className="text-white text-[10px]">Produits</span>
+            <span className="text-white text-[10px] font-semibold">Produits</span>
           </button>
-          <button onClick={e => { e.stopPropagation(); if (navigator.share) navigator.share({ title: currentVendor?.shop_name, url: window.location.href }); }}
+          <button onClick={e => { e.stopPropagation(); navigator.share?.({ title: cv?.shop_name, url: window.location.href }); }}
             className="flex flex-col items-center gap-1">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <TbShare size={20} className="text-white" />
+            <div className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+              <TbShare size={22} className="text-white" />
             </div>
-            <span className="text-white text-[10px]">Partager</span>
+            <span className="text-white text-[10px] font-semibold">Partager</span>
           </button>
         </div>
 
-        {/* Navigation vendeurs */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
-          {activeVendor > 0 && (
-            <button onClick={e => { e.stopPropagation(); goPrev(); }}
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white">
-              <TbChevronUp size={18} />
-            </button>
-          )}
-          {activeVendor < vendors.length - 1 && (
-            <button onClick={e => { e.stopPropagation(); goNext(); }}
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white">
-              <TbChevronDown size={18} />
-            </button>
-          )}
-        </div>
+        {/* Bouton visiter boutique */}
+        {!showProducts && (
+          <div className="absolute bottom-8 left-4 right-4 z-30">
+            <Link href={"/vendeurs/" + cv?.id} onClick={() => setViewer(false)}
+              className="flex items-center justify-center gap-2 bg-white text-[#2B3090] font-bold py-3 rounded-2xl text-sm shadow-xl">
+              <TbBuildingStore size={18} /> Voir la boutique
+            </Link>
+          </div>
+        )}
 
         {/* Panneau produits */}
-        <div className={"absolute bottom-0 left-0 right-0 z-30 transition-transform duration-300 " + (showProducts ? "translate-y-0" : "translate-y-full")}>
-          <div className="bg-white rounded-t-3xl p-4" onClick={e => e.stopPropagation()}>
-            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+        <div className={"absolute bottom-0 left-0 right-0 z-40 transition-transform duration-300 ease-out " +
+          (showProducts ? "translate-y-0" : "translate-y-full")}>
+          <div className="bg-white rounded-t-3xl p-5 max-h-[70vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
             <div className="flex items-center justify-between mb-4">
-              <p className="font-bold text-gray-900">Produits de {currentVendor?.shop_name}</p>
+              <p className="font-bold text-gray-900">Produits · {cv?.shop_name}</p>
               <button onClick={() => setShowProducts(false)}><TbX size={20} className="text-gray-400" /></button>
             </div>
-            {currentVendor?.products?.length === 0 ? (
-              <p className="text-center text-gray-400 text-sm py-4">Aucun produit disponible</p>
-            ) : (
-              <div className="space-y-3 max-h-[50vh] overflow-y-auto">
-                {currentVendor?.products?.map((p: any) => (
-                  <Link key={p.id} href={"/produits/" + p.id} onClick={() => setFullscreen(false)}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
-                      {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center text-gray-300"><TbShoppingBag size={20} /></div>}
+            <div className="overflow-y-auto flex-1 space-y-3 pb-4">
+              {cv?.products?.length === 0 ? (
+                <p className="text-center text-gray-400 text-sm py-8">Aucun produit disponible</p>
+              ) : cv?.products?.map((p: any) => (
+                <Link key={p.id} href={"/produits/" + p.id} onClick={() => setViewer(false)}
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
+                    {p.images?.[0]
+                      ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center"><TbShoppingBag size={20} className="text-gray-300" /></div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 text-sm truncate">{p.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {p.promo_price ? (
+                        <>
+                          <span className="text-[#2B3090] font-bold text-sm">{fmt(p.promo_price)}</span>
+                          <span className="text-gray-400 text-xs line-through">{fmt(p.price)}</span>
+                          <span className="bg-red-100 text-red-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                            -{Math.round((1 - p.promo_price / p.price) * 100)}%
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[#2B3090] font-bold text-sm">{fmt(p.price)}</span>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-900 text-sm truncate">{p.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {p.promo_price ? (
-                          <>
-                            <span className="text-[#2B3090] font-bold text-sm">{fmt(p.promo_price)}</span>
-                            <span className="text-gray-400 text-xs line-through">{fmt(p.price)}</span>
-                          </>
-                        ) : (
-                          <span className="text-[#2B3090] font-bold text-sm">{fmt(p.price)}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="bg-[#2B3090] text-white text-xs font-bold px-3 py-1.5 rounded-xl flex-shrink-0">
-                      Voir
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-            <Link href={"/vendeurs/" + currentVendor?.id} onClick={() => setFullscreen(false)}
-              className="mt-4 w-full flex items-center justify-center gap-2 bg-[#F5A623] text-white font-bold py-3 rounded-2xl text-sm">
+                  </div>
+                  <div className="bg-[#2B3090] text-white text-xs font-bold px-3 py-2 rounded-xl flex-shrink-0">
+                    Voir
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <Link href={"/vendeurs/" + cv?.id} onClick={() => setViewer(false)}
+              className="flex items-center justify-center gap-2 bg-[#F5A623] text-white font-bold py-3.5 rounded-2xl text-sm mt-2">
               <TbBuildingStore size={16} /> Voir toute la boutique
             </Link>
           </div>
         </div>
-
       </div>
     </div>
   );
