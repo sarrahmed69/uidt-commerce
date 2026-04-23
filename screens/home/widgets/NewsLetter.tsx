@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { TbX, TbBuildingStore, TbArrowRight } from "react-icons/tb";
 import Link from "next/link";
@@ -37,12 +37,12 @@ export default function NewsLetter() {
             </button>
           </div>
 
-          <p className="text-xs font-semibold text-[#2B3090] uppercase tracking-wider mb-1">UIDT Commerce</p>
+          <p className="text-xs font-semibold text-[#2B3090] uppercase tracking-wider mb-1">KayJend</p>
           <h3 className="text-lg font-bold text-gray-900 leading-snug mb-2">
             Vendez sur le campus pour seulement <span className="text-[#F5A623]">1 000 FCFA/mois</span>
           </h3>
           <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-            Rejoignez des centaines d etudiants qui vendent leurs produits directement via WhatsApp.
+            Rejoignez des centaines d etudiants qui vendent leurs produits directement sur la plateforme KayJend.
           </p>
 
           <div className="flex gap-2">

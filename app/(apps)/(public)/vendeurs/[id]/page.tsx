@@ -35,7 +35,7 @@ export default function VendeurDetailPage() {
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
-      await navigator.share({ title: vendor?.shop_name, text: "Decouvrez cette boutique sur UIDT Commerce", url });
+      await navigator.share({ title: vendor?.shop_name, text: "Decouvrez cette boutique sur KayJend", url });
     } else {
       await navigator.clipboard.writeText(url);
       setCopied(true);

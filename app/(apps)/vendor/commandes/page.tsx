@@ -1,17 +1,20 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { sendPushToUser } from "@/lib/push/client";
 import { useRouter } from "next/navigation";
+
 import {
   TbShoppingBag, TbLoader2, TbClock, TbCheck, TbX,
   TbBrandWhatsapp, TbPackage, TbUser, TbArrowLeft,
-  TbTruck, TbSearch, TbBell,
+  TbTruck, TbSearch, TbBell, TbMessageCircle,
 } from "react-icons/tb";
 
 const fmt = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
 
 type Order = {
   id: string; buyer_name: string; buyer_phone: string | null;
+  buyer_id: string | null;
   items: { id: string; name: string; price: number; qty: number; image: string }[];
   total: number; total_price: number | null; delivery_address: string | null;
   message: string | null; status: string; whatsapp: string | null;
@@ -40,49 +43,52 @@ export default function VendorCommandes() {
   const [search, setSearch] = useState("");
   const [vendorIds, setVendorIds] = useState<string[]>([]);
   const [newAlert, setNewAlert] = useState(false);
-
-  const loadOrders = useCallback(async (vids: string[]) => {
-    const supabase = createClient();
-    const { data } = await supabase.from("orders")
-      .select("*").in("vendor_id", vids)
-      .order("created_at", { ascending: false });
-    return data || [];
-  }, []);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [chatOrder, setChatOrder] = useState<Order | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     (async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/auth/sign-in"); return; }
+      setCurrentUserId(user.id);
       const { data: vendors } = await supabase.from("vendors").select("id").eq("user_id", user.id);
       if (!vendors?.length) { setLoading(false); return; }
       const vids = vendors.map((v: any) => v.id);
       setVendorIds(vids);
-      const data = await loadOrders(vids);
-      setOrders(data);
-      setLoading(false);
+      const { data } = await supabase.from("orders").select("*").in("vendor_id", vids).order("created_at", { ascending: false });
+      setOrders(data || []);
 
-      // Marquer comme vu
+      // Compter messages non lus par commande
+      const { data: unread } = await supabase
+        .from("messages")
+        .select("order_id")
+        .eq("sender_role", "buyer")
+        .is("read_at", null);
+      const counts: Record<string, number> = {};
+      (unread || []).forEach((m: any) => { counts[m.order_id] = (counts[m.order_id] || 0) + 1; });
+      setUnreadCounts(counts);
+
+      setLoading(false);
       localStorage.setItem("vendor_last_seen_orders", new Date().toISOString());
 
-      // TEMPS REEL — ecouter les nouvelles commandes
       const channel = supabase.channel("vendor-orders")
-        .on("postgres_changes", {
-          event: "INSERT", schema: "public", table: "orders",
-          filter: vids.length === 1 ? `vendor_id=eq.${vids[0]}` : undefined,
-        }, (payload) => {
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
           if (!vids.includes(payload.new.vendor_id)) return;
           setOrders(prev => [payload.new as Order, ...prev]);
           setNewAlert(true);
-          // Son de notification
-          try { const a = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAA..."); a.volume = 0.3; a.play().catch(() => {}); } catch {}
           setTimeout(() => setNewAlert(false), 4000);
         })
-        .on("postgres_changes", {
-          event: "UPDATE", schema: "public", table: "orders",
-        }, (payload) => {
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, (payload) => {
           if (!vids.includes(payload.new.vendor_id)) return;
           setOrders(prev => prev.map(o => o.id === payload.new.id ? { ...o, ...payload.new } : o));
+        })
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
+          const msg = payload.new as any;
+          if (msg.sender_role === "buyer") {
+            setUnreadCounts(prev => ({ ...prev, [msg.order_id]: (prev[msg.order_id] || 0) + 1 }));
+          }
         })
         .subscribe();
 
@@ -90,48 +96,50 @@ export default function VendorCommandes() {
     })();
   }, []);
 
+  const openChat = (order: Order) => {
+    setChatOrder(order);
+    // Marquer les messages de cet acheteur comme lus
+    setUnreadCounts(prev => ({ ...prev, [order.id]: 0 }));
+    const supabase = createClient();
+    supabase.from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .eq("order_id", order.id)
+      .eq("sender_role", "buyer")
+      .is("read_at", null)
+      .then(() => {});
+  };
+
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id);
     const supabase = createClient();
-    await supabase.from("orders").update({ status }).eq("id", id);
     const order = orders.find(o => o.id === id);
+    await supabase.from("orders").update({ status }).eq("id", id);
 
-    // Gestion stock
+    // 🔔 Notifier l acheteur du changement de statut
+    if (order?.buyer_id) {
+      const labels: Record<string, string> = {
+        confirmed: "✅ Votre commande a ete confirmee !",
+        delivered: "📦 Votre commande a ete livree !",
+        cancelled: "❌ Votre commande a ete annulee",
+      };
+      const msg = labels[status];
+      if (msg) {
+        sendPushToUser(order.buyer_id, "KayJend", msg, "/user/commandes");
+      }
+    }
     if (status === "confirmed" && order?.items?.length) {
       for (const item of order.items) {
         const { data: p } = await supabase.from("products").select("stock").eq("id", item.id).single();
         if (p) await supabase.from("products").update({ stock: Math.max(0, (p.stock || 0) - item.qty) }).eq("id", item.id);
       }
     }
-    if (status === "cancelled" && order?.status === "confirmed" && order?.items?.length) {
-      for (const item of order.items) {
-        const { data: p } = await supabase.from("products").select("stock").eq("id", item.id).single();
-        if (p) await supabase.from("products").update({ stock: (p.stock || 0) + item.qty }).eq("id", item.id);
-      }
-    }
-
-    // CONFIRMATION AUTOMATIQUE AU CLIENT via WhatsApp
     if (status === "confirmed" && order) {
-      const clientPhone = order.buyer_phone?.replace(/\D/g, "") || order.whatsapp?.replace(/\D/g, "");
+      const clientPhone = order.buyer_phone?.replace(/\D/g, "");
       if (clientPhone) {
-        const trackingUrl = order.tracking_token
-          ? window.location.origin + "/suivi/" + order.tracking_token
-          : window.location.origin;
-        const msg = "Bonjour " + order.buyer_name + " ! ✅\n\nVotre commande de " + fmt(order.total_price || 0) + " a ete confirmee par le vendeur.\n\nSuivez votre commande en temps reel :\n" + trackingUrl + "\n\nMerci pour votre achat !";
+        const msg = `Bonjour ${order.buyer_name} ! ✅\n\nVotre commande de ${fmt(order.total_price || 0)} a ete confirmee.\n\nMerci pour votre achat !`;
         window.open("https://wa.me/" + clientPhone + "?text=" + encodeURIComponent(msg), "_blank");
       }
     }
-
-    // LIVREE — envoyer avis au client
-    if (status === "delivered" && order) {
-      const clientPhone = order.buyer_phone?.replace(/\D/g, "") || order.whatsapp?.replace(/\D/g, "");
-      if (clientPhone) {
-        const reviewLink = window.location.origin + "/avis/" + order.id;
-        const msg = "Bonjour " + order.buyer_name + " ! 📦\n\nVotre commande a ete livree avec succes.\n\nLaissez votre avis ici :\n" + reviewLink + "\n\nMerci !";
-        window.open("https://wa.me/" + clientPhone + "?text=" + encodeURIComponent(msg), "_blank");
-      }
-    }
-
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
     setUpdating(null);
   };
@@ -145,23 +153,19 @@ export default function VendorCommandes() {
 
   const pendingCount = orders.filter(o => o.status === "pending").length;
 
-  if (loading) return (
-    <div className="flex justify-center py-24">
-      <TbLoader2 className="text-[#2B3090] animate-spin" size={36} />
-    </div>
-  );
+  if (loading) return <div className="flex justify-center py-24"><TbLoader2 className="text-[#2B3090] animate-spin" size={36} /></div>;
+
+  
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
 
-      {/* Alerte nouvelle commande */}
       {newAlert && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#2B3090] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
           <TbBell size={18} /> Nouvelle commande recue !
         </div>
       )}
 
-      {/* Header */}
       <div>
         <button onClick={() => router.back()} className="flex items-center gap-2 text-sm font-semibold text-gray-400 hover:text-gray-700 transition-colors mb-4 group">
           <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center group-hover:bg-gray-200"><TbArrowLeft size={17} /></div>
@@ -170,7 +174,7 @@ export default function VendorCommandes() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Commandes</h1>
-            <p className="text-sm text-gray-500 mt-0.5">{orders.length} commande{orders.length > 1 ? "s" : ""} recue{orders.length > 1 ? "s" : ""}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{orders.length} commande{orders.length > 1 ? "s" : ""}</p>
           </div>
           {pendingCount > 0 && (
             <div className="bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5">
@@ -180,19 +184,17 @@ export default function VendorCommandes() {
         </div>
       </div>
 
-      {/* Recherche */}
       <div className="relative">
         <TbSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un client, adresse..."
-          className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20 focus:border-[#2B3090]" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un client..."
+          className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#2B3090]/20" />
       </div>
 
-      {/* Filtres */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={"flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all " +
-              (filter === f ? "bg-[#2B3090] text-white shadow-sm" : "bg-white border border-gray-200 text-gray-500 hover:border-gray-300")}>
+              (filter === f ? "bg-[#2B3090] text-white" : "bg-white border border-gray-200 text-gray-500")}>
             {f}
             {f === "En attente" && pendingCount > 0 && (
               <span className="ml-1.5 bg-red-500 text-white text-[9px] px-1 py-0.5 rounded-full">{pendingCount}</span>
@@ -201,18 +203,10 @@ export default function VendorCommandes() {
         ))}
       </div>
 
-      {/* Liste */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <TbShoppingBag className="text-gray-400" size={40} />
-          </div>
-          <h3 className="text-lg font-bold text-gray-700 mb-2">
-            {search || filter !== "Toutes" ? "Aucun résultat" : "Aucune commande pour l instant"}
-          </h3>
-          <p className="text-gray-400 text-sm">
-            {search || filter !== "Toutes" ? "Essayez d autres filtres" : "Les commandes apparaitront ici en temps reel."}
-          </p>
+          <TbShoppingBag className="text-gray-300 mx-auto mb-4" size={40} />
+          <p className="text-gray-400 text-sm">Aucune commande</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -220,10 +214,9 @@ export default function VendorCommandes() {
             const st = STATUS_LABELS[order.status] ?? STATUS_LABELS.pending;
             const Icon = st.icon;
             const date = new Date(order.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+            const unread = unreadCounts[order.id] || 0;
             return (
               <div key={order.id} className={"bg-white rounded-2xl shadow-sm overflow-hidden border " + (order.status === "pending" ? "border-amber-200" : "border-gray-100")}>
-
-                {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-[#2B3090]/10 rounded-xl flex items-center justify-center">
@@ -242,13 +235,12 @@ export default function VendorCommandes() {
                   </div>
                 </div>
 
-                {/* Produits */}
                 <div className="px-5 py-3 space-y-2">
                   {order.items?.map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                         {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold text-lg">{item.name?.[0]}</div>}
+                          : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">{item.name?.[0]}</div>}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
@@ -259,26 +251,28 @@ export default function VendorCommandes() {
                   ))}
                 </div>
 
-                {/* Adresse */}
                 {order.delivery_address && (
                   <div className="mx-5 mb-3 bg-gray-50 rounded-xl px-4 py-2.5 text-xs text-gray-500">
                     📍 {order.delivery_address}
                   </div>
                 )}
-
-                {/* Message */}
                 {order.message && (
                   <div className="mx-5 mb-3 bg-blue-50 rounded-xl px-4 py-2.5 text-sm text-gray-600 italic">
                     "{order.message}"
                   </div>
                 )}
 
-                {/* Actions */}
                 <div className="flex items-center gap-2 px-5 py-3 border-t border-gray-50 flex-wrap">
+                  {/* Lien Messages */}
+                  <button onClick={() => router.push("/user/messages")}
+                    className="relative flex items-center gap-1.5 bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-2 rounded-xl hover:bg-gray-200">
+                    <TbMessageCircle size={16} /> Messages
+                  </button>
+
                   {order.buyer_phone && (
                     <a href={"https://wa.me/" + order.buyer_phone.replace(/\D/g, "")} target="_blank"
                       className="flex items-center gap-1.5 bg-[#2B3090] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90">
-                      <TbBrandWhatsapp size={16} /> Contacter
+                      <TbBrandWhatsapp size={16} /> WhatsApp
                     </a>
                   )}
                   {order.status === "pending" && (
@@ -290,7 +284,7 @@ export default function VendorCommandes() {
                   {order.status === "confirmed" && (
                     <button onClick={() => updateStatus(order.id, "delivered")} disabled={updating === order.id}
                       className="flex items-center gap-1.5 bg-[#2B3090] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90 disabled:opacity-60">
-                      {updating === order.id ? <TbLoader2 size={14} className="animate-spin" /> : <TbPackage size={14} />} Marquer livree
+                      {updating === order.id ? <TbLoader2 size={14} className="animate-spin" /> : <TbPackage size={14} />} Livree
                     </button>
                   )}
                   {order.status !== "cancelled" && order.status !== "delivered" && (

@@ -22,9 +22,9 @@ const NavbarTop: React.FC<NavbarTopProps> = ({ stickToTop = false }) => {
               style={{background:"rgba(245,166,35,0.15)", borderColor:"rgba(245,166,35,0.3)"}}>
               <TbHome size={13} style={{color:"#F5A623"}} />
             </div>
-            <div className="hidden sm:flex items-center gap-1.5">
-              <span className="font-black tracking-wider text-white text-xs group-hover:text-white/80 transition-colors">UIDT</span>
-              <span className="font-black tracking-wider text-xs" style={{color:"#F5A623"}}>Commerce</span>
+            <div className="hidden sm:flex items-center gap-0.5">
+              <span className="font-black tracking-tight text-white text-xs group-hover:text-white/80 transition-colors">Kay</span>
+              <span className="font-black tracking-tight text-xs" style={{color:"#F5A623"}}>Jënd</span>
             </div>
           </Link>
 
@@ -34,7 +34,7 @@ const NavbarTop: React.FC<NavbarTopProps> = ({ stickToTop = false }) => {
               <WordRotate
                 className="text-xs font-medium text-white/80"
                 words={[
-                  "Bienvenue sur UIDT Commerce — Campus Marketplace",
+                  "Bienvenue sur KayJend — Le marche du campus",
                   "Paiement Wave & Orange Money acceptes",
                   "Commandez directement via WhatsApp",
                   "Achetez & vendez entre etudiants",

@@ -44,7 +44,7 @@ const SignUp = () => {
       const response = await signUpUser.mutateAsync(data);
       if (response?.success) {
         reset();
-        toast.success("Compte créé avec succès ! Bienvenue sur UIDT Commerce.");
+        toast.success("Compte créé avec succès ! Bienvenue sur KayJend.");
         router.push("/auth/confirm-otp");
       } else {
         toast.error(response?.message || "Échec de l'inscription. Veuillez réessayer.");
@@ -59,7 +59,7 @@ const SignUp = () => {
   };
 
   return (
-    <AuthLayout title="Créer un compte" subtitle="Rejoignez UIDT Commerce et achetez ou vendez sur le campus">
+    <AuthLayout title="Créer un compte" subtitle="Rejoignez KayJend et achetez ou vendez sur le campus">
       <form className="max-w-96 w-full mt-4" onSubmit={handleSubmit(onSubmit)}>
         <AuthInput type="text" label="Nom complet *" icon={<BiUser />} {...register("fullName")} />
         {errors.fullName && <div className="text-red-600 font-semibold text-sm mt-2">{errors.fullName.message}</div>}

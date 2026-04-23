@@ -106,7 +106,7 @@ export default function AbonnementPage() {
   ];
 
   const waMsg = encodeURIComponent(
-    "Bonjour, j'ai effectue mon paiement Wave de " + fmt(PRICE) + " FCFA pour UIDT Commerce.\n" +
+    "Bonjour, j'ai effectue mon paiement Wave de " + fmt(PRICE) + " FCFA pour KayJend.\n" +
     "Boutique : " + (vendor?.shop_name || "") + "\n" +
     "Merci de bien vouloir activer mon abonnement."
   );

@@ -1,12 +1,14 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import EnableNotificationsButton from "@/components/notifications/EnableNotificationsButton";
 import {
   TbUser, TbPackage, TbHeart, TbMapPin, TbLogout,
   TbShoppingBag, TbChevronRight, TbBuildingStore,
-  TbLoader2, TbEdit, TbLayoutDashboard,
+  TbLoader2, TbEdit, TbLayoutDashboard, TbMessageCircle,
 } from "react-icons/tb";
 
 export default function UserDashboard() {
@@ -61,6 +63,7 @@ export default function UserDashboard() {
 
   const menuItems = [
     { icon: TbShoppingBag, label: "Mes commandes", sub: "Suivre et gerer vos achats", href: "/user/commandes", color: "bg-blue-50 text-blue-500" },
+    { icon: TbMessageCircle, label: "Mes messages", sub: "Discuter avec les vendeurs", href: "/user/messages", color: "bg-indigo-50 text-indigo-500" },
     { icon: TbHeart, label: "Mes favoris", sub: "Produits sauvegardes", href: "/user/favoris", color: "bg-red-50 text-red-500" },
     { icon: TbMapPin, label: "Mes adresses", sub: "Gerer vos adresses de livraison", href: "/user/adresses", color: "bg-green-50 text-green-500" },
     { icon: TbUser, label: "Mon profil", sub: "Modifier vos informations", href: "/user/profil", color: "bg-purple-50 text-purple-500" },
@@ -102,6 +105,17 @@ export default function UserDashboard() {
           <Link href="/user/profil" className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 hover:bg-primary/10 hover:text-primary transition-colors">
             <TbEdit size={18} />
           </Link>
+        </div>
+
+        {/* 🔔 Activer notifications */}
+        <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-4 mb-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <p className="font-bold text-white text-sm">🔔 Restez informe</p>
+              <p className="text-xs text-white/80 mt-0.5">Recevez une notification quand votre commande est confirmee ou livree</p>
+            </div>
+            <EnableNotificationsButton />
+          </div>
         </div>
 
         {/* Stats */}

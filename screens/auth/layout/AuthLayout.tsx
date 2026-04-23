@@ -1,8 +1,7 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
-import { TbBuildingStore, TbShoppingBag, TbBrandWhatsapp, TbStar, TbPackage, TbCreditCard } from "react-icons/tb";
+import { TbShoppingBag, TbBrandWhatsapp, TbStar } from "react-icons/tb";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -19,20 +18,14 @@ const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -translate-y-36 translate-x-36" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full translate-y-48 -translate-x-48" />
 
-        <Link href="/" className="flex items-center gap-3 relative z-10">
-          <Image src="/images/uidt-logo.png" alt="Universite de Thies" width={48} height={48}
-            className="rounded-full object-cover bg-white p-0.5" style={{ width: 48, height: 48 }} />
-          <div>
-            <p className="font-bold text-xl leading-none">UIDT Commerce</p>
-            <p className="text-xs text-[#F5A623] uppercase tracking-widest">Campus Marketplace</p>
-          </div>
+        <Link href="/" className="relative z-10 select-none">
+          <span className="font-black text-4xl tracking-tight leading-none" style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+            <span style={{ color: "#FFFFFF" }}>Kay</span><span style={{ color: "#F5A623" }}>Jënd</span>
+          </span>
+          <p className="text-[10px] text-[#F5A623] uppercase tracking-[0.25em] mt-2 font-semibold">Le marche du campus</p>
         </Link>
 
         <div className="relative z-10 space-y-8">
-
-
-
-          {/* Features */}
           <div className="space-y-3">
             {[
               { icon: TbShoppingBag, text: "Achetez et vendez directement sur le campus de l UIDT" },
@@ -47,12 +40,10 @@ const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
               </div>
             ))}
           </div>
-
-
         </div>
 
         <p className="text-xs text-blue-300 relative z-10">
-          &copy; {new Date().getFullYear()} UIDT Commerce — Universite de Thies. Tous droits reserves.
+          &copy; {new Date().getFullYear()} KayJend — Universite de Thies. Tous droits reserves.
         </p>
       </div>
 
@@ -61,10 +52,10 @@ const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
         <motion.div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 sm:p-10"
           initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
 
-          <Link href="/" className="flex items-center gap-2 mb-8 lg:hidden">
-            <Image src="/images/uidt-logo.png" alt="Universite de Thies" width={32} height={32}
-              className="rounded-full object-cover" style={{ width: 32, height: 32 }} />
-            <span className="font-bold text-[#2B3090] text-lg">UIDT Commerce</span>
+          <Link href="/" className="mb-8 lg:hidden flex items-center select-none">
+            <span className="font-black text-2xl tracking-tight leading-none" style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+              <span style={{ color: "#1e4a9e" }}>Kay</span><span style={{ color: "#F5A623" }}>Jënd</span>
+            </span>
           </Link>
 
           <h1 className="text-3xl font-bold text-gray-800 mb-1">{title}</h1>

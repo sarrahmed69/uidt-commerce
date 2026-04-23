@@ -1,52 +1,133 @@
 "use client";
+import EnableNotificationsButton from "@/components/notifications/EnableNotificationsButton";
 import StoryUpload from "@/components/stories/StoryUpload";
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { TbBuildingStore, TbPlus, TbPackage, TbLoader2, TbShoppingBag, TbChevronRight, TbStar, TbCheck, TbTrash, TbX, TbCreditCard, TbPencil, TbEye, TbLock } from "react-icons/tb";
+import { TbBuildingStore, TbPlus, TbPackage, TbLoader2, TbShoppingBag, TbChevronRight, TbStar, TbCheck, TbTrash, TbX, TbCreditCard, TbPencil, TbEye, TbLock, TbMapPin, TbHome } from "react-icons/tb";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
-function BoutiqueModal({ title, subtitle, values, onChangeName, onChangePhone, onChangeBatiment, onChangeChambre, onSave, onClose, saving, saveLabel }: {
+const CAMPUS_SITES = ["VCN", "Hotel du Rail", "Hors Campus"];
+const VCN_PAVILLONS = ["Pavillon A", "Pavillon B"];
+
+function BoutiqueModal({ title, subtitle, values, onChangeName, onChangePhone, onChangeSite, onChangePavillon, onChangeChambre, onChangeHotelChambre, onSave, onClose, saving, saveLabel }: {
   title: string; subtitle: string;
-  values: { shop_name: string; whatsapp: string; batiment: string; chambre: string };
+  values: { shop_name: string; whatsapp: string; site: string; pavillon: string; chambre: string; hotelChambre: string };
   onChangeName: (v: string) => void; onChangePhone: (v: string) => void;
-  onChangeBatiment: (v: string) => void; onChangeChambre: (v: string) => void;
+  onChangeSite: (v: string) => void; onChangePavillon: (v: string) => void;
+  onChangeChambre: (v: string) => void; onChangeHotelChambre: (v: string) => void;
   onSave: () => void; onClose: () => void; saving: boolean; saveLabel: string;
 }) {
   const inputClass = "w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30";
+
+  const getAdresse = () => {
+    if (values.site === "Hors Campus") return "Hors Campus";
+    if (values.site === "Hotel du Rail" && values.hotelChambre) return `Hotel du Rail — Chambre ${values.hotelChambre}`;
+    if (values.site === "VCN" && values.pavillon && values.chambre) return `VCN — ${values.pavillon} — Chambre ${values.chambre}`;
+    return "";
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden">
-        <div className="bg-[#2B3090] p-6">
+      <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
+        <div className="bg-[#2B3090] p-6 flex-shrink-0">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-bold text-white text-lg">{title}</h3>
             <button onClick={onClose} className="text-white/60 hover:text-white"><TbX size={20} /></button>
           </div>
           <p className="text-white/60 text-xs">{subtitle}</p>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+
+          {/* Nom boutique */}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">Nom de la boutique *</label>
-            <input className={inputClass} placeholder="Ex: Kaay Dieundeu" value={values.shop_name} onChange={e => onChangeName(e.target.value)} onKeyDown={e => e.key === "Enter" && onSave()} autoFocus />
+            <input className={inputClass} placeholder="Ex: Kaay Dieundeu" value={values.shop_name}
+              onChange={e => onChangeName(e.target.value)} autoFocus />
           </div>
+
+          {/* Telephone */}
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">Telephone WhatsApp</label>
-            <input className={inputClass} placeholder="+221 77 123 45 67" value={values.whatsapp} onChange={e => onChangePhone(e.target.value)} />
+            <input className={inputClass} placeholder="+221 77 123 45 67" value={values.whatsapp}
+              onChange={e => onChangePhone(e.target.value)} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Batiment</label>
-              <input className={inputClass} placeholder="Ex: B7" value={values.batiment} onChange={e => onChangeBatiment(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Chambre</label>
-              <input className={inputClass} placeholder="Ex: 204" value={values.chambre} onChange={e => onChangeChambre(e.target.value)} />
+
+          {/* Campus */}
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">Campus / Site</label>
+            <div className="grid grid-cols-3 gap-2">
+              {CAMPUS_SITES.map(s => (
+                <button key={s} type="button"
+                  onClick={() => { onChangeSite(s); onChangePavillon(""); onChangeChambre(""); onChangeHotelChambre(""); }}
+                  className={`py-2.5 px-1 rounded-xl text-xs font-bold border-2 transition-all text-center leading-tight ${
+                    values.site === s ? "border-[#2B3090] bg-[#2B3090]/5 text-[#2B3090]" : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}>
+                  <TbHome className="mx-auto mb-0.5" size={13} />{s}
+                </button>
+              ))}
             </div>
           </div>
+
+          {/* VCN : Pavillon */}
+          {values.site === "VCN" && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Pavillon</label>
+              <div className="grid grid-cols-2 gap-2">
+                {VCN_PAVILLONS.map(p => (
+                  <button key={p} type="button"
+                    onClick={() => onChangePavillon(p)}
+                    className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                      values.pavillon === p ? "border-[#2B3090] bg-[#2B3090]/5 text-[#2B3090]" : "border-gray-200 text-gray-500"
+                    }`}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* VCN : Chambre 1-60 */}
+          {values.site === "VCN" && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Numero de chambre (1-60)</label>
+              <input className={inputClass} placeholder="Ex: 24" type="number" min="1" max="60"
+                value={values.chambre} onChange={e => onChangeChambre(e.target.value)} />
+            </div>
+          )}
+
+          {/* Hotel du Rail : A1-A50 */}
+          {values.site === "Hotel du Rail" && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Numero de chambre</label>
+              <div className="grid grid-cols-5 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                {Array.from({ length: 50 }, (_, i) => `A${i + 1}`).map(c => (
+                  <button key={c} type="button"
+                    onClick={() => onChangeHotelChambre(c)}
+                    className={`py-2 rounded-lg text-xs font-bold border-2 transition-all ${
+                      values.hotelChambre === c ? "border-[#2B3090] bg-[#2B3090] text-white" : "border-gray-200 text-gray-600 hover:border-[#2B3090]/50"
+                    }`}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Apercu adresse */}
+          {getAdresse() && (
+            <div className="bg-[#2B3090]/5 border border-[#2B3090]/20 rounded-xl px-4 py-3 flex items-center gap-2">
+              <TbMapPin className="text-[#2B3090] flex-shrink-0" size={15} />
+              <p className="text-xs text-[#2B3090] font-semibold">{getAdresse()}</p>
+            </div>
+          )}
+
+          {/* Boutons */}
           <div className="flex gap-3 pt-1">
             <button onClick={onClose} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm text-gray-500 hover:bg-gray-50">Annuler</button>
-            <button onClick={onSave} disabled={saving || !values.shop_name.trim()} className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={onSave} disabled={saving || !values.shop_name.trim()}
+              className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
               {saving && <TbLoader2 size={16} className="animate-spin" />}{saveLabel}
             </button>
           </div>
@@ -73,16 +154,28 @@ export default function VendorDashboard() {
 
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
-  const [newBatiment, setNewBatiment] = useState("");
+  const [newSite, setNewSite] = useState("");
+  const [newPavillon, setNewPavillon] = useState("");
   const [newChambre, setNewChambre] = useState("");
+  const [newHotelChambre, setNewHotelChambre] = useState("");
+
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
-  const [editBatiment, setEditBatiment] = useState("");
+  const [editSite, setEditSite] = useState("");
+  const [editPavillon, setEditPavillon] = useState("");
   const [editChambre, setEditChambre] = useState("");
+  const [editHotelChambre, setEditHotelChambre] = useState("");
 
   const selected = boutiques.find(b => b.id === selectedId) ?? boutiques[0] ?? null;
   const totalProduits = Object.values(produitsCounts).reduce((a, b) => a + b, 0);
   const totalOrders = Object.values(orderCounts).reduce((a, b) => a + b, 0);
+
+  const getAdresseFromState = (site: string, pavillon: string, chambre: string, hotelChambre: string) => {
+    if (site === "Hors Campus") return "Hors Campus";
+    if (site === "Hotel du Rail" && hotelChambre) return `Hotel du Rail — Chambre ${hotelChambre}`;
+    if (site === "VCN" && pavillon && chambre) return `VCN — ${pavillon} — Chambre ${chambre}`;
+    return "";
+  };
 
   useEffect(() => {
     (async () => {
@@ -110,20 +203,23 @@ export default function VendorDashboard() {
   }, []);
 
   const selectBoutique = (id: string) => { setSelectedId(id); localStorage.setItem("vendor_selected_id", id); };
-  const resetCreate = () => { setNewName(""); setNewPhone(""); setNewBatiment(""); setNewChambre(""); };
-  const resetEdit = () => { setEditName(""); setEditPhone(""); setEditBatiment(""); setEditChambre(""); };
+  const resetCreate = () => { setNewName(""); setNewPhone(""); setNewSite(""); setNewPavillon(""); setNewChambre(""); setNewHotelChambre(""); };
+  const resetEdit = () => { setEditName(""); setEditPhone(""); setEditSite(""); setEditPavillon(""); setEditChambre(""); setEditHotelChambre(""); };
 
-  const createBoutique = async () => { if (isSuspended) return;
+  const createBoutique = async () => {
+    if (isSuspended) return;
     if (!newName.trim()) return;
     setCreating(true);
     const rawPhone = newPhone.replace(/\D/g, "");
     const cleanPhone = rawPhone.length >= 9 ? rawPhone.slice(-9) : "";
-    const res = await fetch("/api/vendors/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ shopName: newName.trim(), waveNumber: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : undefined, type: "student", campusDelivery: true }) });
+    const adresse = getAdresseFromState(newSite, newPavillon, newChambre, newHotelChambre);
+    const res = await fetch("/api/vendors/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ shopName: newName.trim(), waveNumber: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : undefined, type: "student", campusDelivery: true, address: adresse || undefined }) });
     const json = await res.json();
     if (json.success && json.data) {
       const supabase = createClient();
       const { data: { user: u } } = await supabase.auth.getUser();
       if (u) await supabase.from("vendor_accounts").upsert({ user_id: u.id }, { onConflict: "user_id" });
+      if (adresse) await supabase.from("vendors").update({ address: adresse }).eq("id", json.data.id);
       setBoutiques(prev => [json.data, ...prev]);
       setProduitsCounts(prev => ({ ...prev, [json.data.id]: 0 }));
       selectBoutique(json.data.id);
@@ -140,7 +236,12 @@ export default function VendorDashboard() {
     const supabase = createClient();
     const rawPhone = editPhone.replace(/\D/g, "");
     const cleanPhone = rawPhone.length >= 9 ? rawPhone.slice(-9) : "";
-    const { data, error } = await supabase.from("vendors").update({ shop_name: editName.trim(), wave_number: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : null }).eq("id", showEdit.id).select().single();
+    const adresse = getAdresseFromState(editSite, editPavillon, editChambre, editHotelChambre);
+    const { data, error } = await supabase.from("vendors").update({
+      shop_name: editName.trim(),
+      wave_number: cleanPhone.match(/^7[0-9]{8}$/) ? cleanPhone : null,
+      address: adresse || null,
+    }).eq("id", showEdit.id).select().single();
     if (!error && data) { setBoutiques(prev => prev.map(b => b.id === data.id ? data : b)); setShowEdit(null); resetEdit(); }
     else alert("Erreur : " + error?.message);
     setEditing(false);
@@ -173,16 +274,15 @@ export default function VendorDashboard() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      {/* Story rapide */}
-      {selected && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4">
-          <StoryUpload vendorId={selected.id} vendorName={selected.shop_name} />
-          <div>
-            <p className="font-semibold text-gray-800 text-sm">Ajouter une story</p>
-            <p className="text-xs text-gray-400">Visible 24h par tous les clients</p>
+        {selected && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4">
+            <StoryUpload vendorId={selected.id} vendorName={selected.shop_name} />
+            <div>
+              <p className="font-semibold text-gray-800 text-sm">Ajouter une story</p>
+              <p className="text-xs text-gray-400">Visible 24h par tous les clients</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Bonjour, {firstName} !</h1>
           <p className="text-sm text-gray-500 mt-0.5">{boutiques.length} boutique{boutiques.length > 1 ? "s" : ""} · {totalProduits} produit{totalProduits > 1 ? "s" : ""}</p>
@@ -249,12 +349,13 @@ export default function VendorDashboard() {
                     <p className="text-xs mt-0.5">
                       <span className={"font-medium " + (sub ? "text-green-600" : "text-orange-500")}>{sub ? "Abonne" : "Non abonne"}</span>
                       <span className="text-gray-400"> · {nbProduits} produit{nbProduits > 1 ? "s" : ""}</span>
+                      {b.address && <span className="text-gray-400"> · {b.address}</span>}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Link href="/vendor/produits" onClick={() => selectBoutique(b.id)} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-blue-50 hover:text-blue-500 transition-colors"><TbEye size={15} /></Link>
                     <Link href="/vendor/produits/nouveau" onClick={() => selectBoutique(b.id)} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors"><TbPlus size={15} /></Link>
-                    <button onClick={() => { setShowEdit(b); setEditName(b.shop_name); setEditPhone(b.wave_number || ""); setEditBatiment(""); setEditChambre(""); }} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-orange-50 hover:text-orange-500 transition-colors"><TbPencil size={15} /></button>
+                    <button onClick={() => { setShowEdit(b); setEditName(b.shop_name); setEditPhone(b.wave_number || ""); setEditSite(""); setEditPavillon(""); setEditChambre(""); setEditHotelChambre(""); }} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-orange-50 hover:text-orange-500 transition-colors"><TbPencil size={15} /></button>
                     <button onClick={() => setConfirmDeleteId(b.id)} className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-red-50 hover:text-red-400 transition-colors">
                       {deleting === b.id ? <TbLoader2 size={15} className="animate-spin" /> : <TbTrash size={15} />}
                     </button>
@@ -282,16 +383,20 @@ export default function VendorDashboard() {
       )}
 
       {showCreate && (
-        <BoutiqueModal title="Nouvelle boutique" subtitle="Creez votre espace de vente sur UIDT Commerce"
-          values={{ shop_name: newName, whatsapp: newPhone, batiment: newBatiment, chambre: newChambre }}
-          onChangeName={setNewName} onChangePhone={setNewPhone} onChangeBatiment={setNewBatiment} onChangeChambre={setNewChambre}
+        <BoutiqueModal title="Nouvelle boutique" subtitle="Creez votre espace de vente sur KayJend"
+          values={{ shop_name: newName, whatsapp: newPhone, site: newSite, pavillon: newPavillon, chambre: newChambre, hotelChambre: newHotelChambre }}
+          onChangeName={setNewName} onChangePhone={setNewPhone}
+          onChangeSite={setNewSite} onChangePavillon={setNewPavillon}
+          onChangeChambre={setNewChambre} onChangeHotelChambre={setNewHotelChambre}
           onSave={createBoutique} onClose={() => { setShowCreate(false); resetCreate(); }} saving={creating} saveLabel="Creer ma boutique" />
       )}
 
       {showEdit && (
         <BoutiqueModal title={"Modifier : " + showEdit.shop_name} subtitle="Mettez a jour les informations de votre boutique"
-          values={{ shop_name: editName, whatsapp: editPhone, batiment: editBatiment, chambre: editChambre }}
-          onChangeName={setEditName} onChangePhone={setEditPhone} onChangeBatiment={setEditBatiment} onChangeChambre={setEditChambre}
+          values={{ shop_name: editName, whatsapp: editPhone, site: editSite, pavillon: editPavillon, chambre: editChambre, hotelChambre: editHotelChambre }}
+          onChangeName={setEditName} onChangePhone={setEditPhone}
+          onChangeSite={setEditSite} onChangePavillon={setEditPavillon}
+          onChangeChambre={setEditChambre} onChangeHotelChambre={setEditHotelChambre}
           onSave={saveBoutique} onClose={() => { setShowEdit(null); resetEdit(); }} saving={editing} saveLabel="Enregistrer" />
       )}
 

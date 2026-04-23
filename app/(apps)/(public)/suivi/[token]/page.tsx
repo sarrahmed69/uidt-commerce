@@ -160,7 +160,7 @@ export default function SuiviPage() {
             )}
           </div>
         )}
-        <p className="text-center text-xs text-gray-300">UIDT Commerce · Campus Marketplace</p>
+        <p className="text-center text-xs text-gray-300">KayJend · Le marche du campus</p>
       </div>
     </div>
   );

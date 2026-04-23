@@ -63,7 +63,7 @@ export default function DevenirVendeurPage() {
           <motion.div className="text-center max-w-3xl mx-auto" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
               className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-xs font-semibold px-4 py-2 rounded-full mb-8 uppercase tracking-widest">
-              <TbSparkles size={14} className="text-yellow-400" /> UIDT Commerce — Campus Marketplace
+              <TbSparkles size={14} className="text-yellow-400" /> KayJend — Le marche du campus
             </motion.div>
             <h1 className="text-5xl md:text-7xl font-black text-white leading-[0.95] tracking-tight mb-6">
               Vendez sur<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-blue-200">le campus.</span>
@@ -214,7 +214,7 @@ export default function DevenirVendeurPage() {
               <TbTrendingUp className="text-indigo-300" size={30} />
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">Pret a vendre<br />sur le campus ?</h2>
-            <p className="text-white/50 mb-10 max-w-md mx-auto leading-relaxed">Rejoignez UIDT Commerce. 1 000 FCFA/mois. Sans commission. Paiements directs.</p>
+            <p className="text-white/50 mb-10 max-w-md mx-auto leading-relaxed">Rejoignez KayJend. 1 000 FCFA/mois. Sans commission. Paiements directs.</p>
             <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               className="bg-white text-[#2B3090] font-black px-10 py-4 rounded-2xl hover:bg-indigo-50 transition-all duration-200 inline-flex items-center gap-2 shadow-[0_4px_30px_rgba(255,255,255,0.15)] active:scale-95">
               Creer mon compte vendeur <TbArrowRight size={20} />

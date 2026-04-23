@@ -8,9 +8,13 @@ import {
   TbTruck, TbTag, TbMinus, TbPlus, TbCheck, TbX,
   TbShoppingBag, TbAlertCircle, TbShare, TbHeart,
   TbStar, TbStarFilled, TbMessageCircle, TbSend,
+  TbPhone, TbUser, TbMapPin, TbHome, TbLock,
 } from "react-icons/tb";
 
 const formatPrice = (p: number) => new Intl.NumberFormat("fr-FR").format(p) + " FCFA";
+
+const CAMPUS_SITES = ["VCN", "Hotel du Rail", "Hors Campus"];
+const VCN_PAVILLONS = ["Pavillon A", "Pavillon B"];
 
 const StarPicker = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => (
   <div className="flex gap-1">
@@ -44,9 +48,18 @@ export default function ProduitDetail() {
   const [showModal, setShowModal] = useState(false);
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [form, setForm] = useState({ nom: "", phone: "", message: "" });
   const [liked, setLiked] = useState(false);
   const [shared, setShared] = useState(false);
+
+  // Formulaire commande
+  const [nom, setNom] = useState("");
+  const [telephone, setTelephone] = useState("");
+  const [site, setSite] = useState("");
+  const [pavillon, setPavillon] = useState("");
+  const [chambre, setChambre] = useState("");
+  const [hotelChambre, setHotelChambre] = useState("");
+  const [message, setMessage] = useState("");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: "" });
@@ -65,6 +78,10 @@ export default function ProduitDetail() {
       setReviews(revs || []);
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id || null);
+      if (user) {
+        const name = user.user_metadata?.full_name || user.user_metadata?.firstName || "";
+        if (name) setNom(name);
+      }
       setLoading(false);
     };
     load();
@@ -73,6 +90,28 @@ export default function ProduitDetail() {
   }, [id]);
 
   const avgRating = reviews.length > 0 ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;
+
+  const getAdresse = () => {
+    if (site === "Hors Campus") return "Hors Campus";
+    if (site === "Hotel du Rail") return `Hotel du Rail — Chambre ${hotelChambre}`;
+    if (site === "VCN") return `VCN — ${pavillon} — Chambre ${chambre}`;
+    return "";
+  };
+
+  const validate = () => {
+    const errors: Record<string, string> = {};
+    if (!nom.trim()) errors.nom = "Le nom est obligatoire";
+    if (!telephone.trim()) errors.telephone = "Le telephone est obligatoire";
+    if (!site) errors.site = "Choisissez votre campus";
+    if (site === "VCN") {
+      if (!pavillon) errors.pavillon = "Choisissez un pavillon";
+      if (!chambre) errors.chambre = "Entrez votre numero de chambre";
+      else if (parseInt(chambre) < 1 || parseInt(chambre) > 60) errors.chambre = "Entre 1 et 60";
+    }
+    if (site === "Hotel du Rail" && !hotelChambre) errors.hotelChambre = "Choisissez votre chambre";
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleReview = async () => {
     setReviewError("");
@@ -106,7 +145,7 @@ export default function ProduitDetail() {
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
-      await navigator.share({ title: product?.name, text: "Regardez ce produit sur UIDT Commerce !", url });
+      await navigator.share({ title: product?.name, text: "Regardez ce produit sur KayJend !", url });
     } else {
       await navigator.clipboard.writeText(url);
       setShared(true);
@@ -115,35 +154,49 @@ export default function ProduitDetail() {
   };
 
   const handleCommander = async () => {
-    if (!form.nom.trim() || !form.phone.trim()) return;
+    if (!userId) {
+      router.push("/auth/sign-in?redirect=" + encodeURIComponent(window.location.pathname) + "&role=buyer");
+      return;
+    }
+    if (!validate()) return;
     setSending(true);
     try {
       const supabase = createClient();
       const finalPrice = getPrice(product);
+      const adresse = getAdresse();
       const { error } = await supabase.from("orders").insert([{
         vendor_id: product.vendor_id,
-        buyer_name: form.nom.trim(),
-        buyer_whatsapp: form.phone.trim(),
-        whatsapp: form.phone.trim(),
+        buyer_id: userId,
+        buyer_name: nom.trim(),
+        buyer_phone: telephone.trim(),
+        delivery_address: adresse,
         items: [{ id: product.id, name: product.name, price: finalPrice, qty, image: product.images?.[0] || "" }],
         total: finalPrice * qty,
-        message: form.message.trim() || null,
+        message: message.trim() || null,
         status: "pending",
+        whatsapp: product.vendors?.wave_number || null,
       }]);
       if (error) { alert("Erreur lors de la commande. Reessayez."); setSending(false); return; }
+
+      // Mettre a jour le stock
+      const { data: prod } = await supabase.from("products").select("stock").eq("id", product.id).single();
+      if (prod) await supabase.from("products").update({ stock: Math.max(0, (prod.stock || 0) - qty) }).eq("id", product.id);
+
+      // Envoyer WhatsApp au vendeur
       const phone = (product.vendors?.wave_number || "").replace(/\D/g, "");
       if (phone) {
         const msg = encodeURIComponent(
-          "Bonjour ! J'ai passe une commande sur UIDT Commerce.\n\n" +
-          "Produit : " + product.name + "\n" +
-          "Quantite : " + qty + "\n" +
-          "Total : " + formatPrice(finalPrice * qty) + "\n\n" +
-          "Mon nom : " + form.nom + "\n" +
-          "Mon tel : " + form.phone +
-          (form.message ? "\n\nMessage : " + form.message : "") +
-          "\n\nMerci de confirmer ma commande !"
+          `Bonjour ! Nouvelle commande KayJend.\n\n` +
+          `Produit : ${product.name}\n` +
+          `Quantite : ${qty}\n` +
+          `Total : ${formatPrice(finalPrice * qty)}\n\n` +
+          `👤 Nom : ${nom}\n` +
+          `📞 Tel : ${telephone}\n` +
+          `📍 Adresse : ${adresse}` +
+          (message ? `\n💬 Message : ${message}` : "") +
+          `\n\nMerci de confirmer !`
         );
-        window.open("https://wa.me/" + phone + "?text=" + msg, "_blank");
+        window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
       }
       setSuccess(true);
       setSending(false);
@@ -164,65 +217,168 @@ export default function ProduitDetail() {
   const finalPrice = getPrice(product);
   const isPromo = product.promo_price && product.promo_ends_at && new Date(product.promo_ends_at) > new Date();
 
+  const inputCls = (field: string) =>
+    `w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm outline-none transition-all ${
+      formErrors[field] ? "border-red-300 focus:ring-2 focus:ring-red-200" : "border-gray-200 focus:ring-2 focus:ring-primary/20"
+    }`;
+
   return (
     <div className="min-h-screen bg-gray-50">
+
+      {/* Modal commande */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-2 pb-2 sm:pb-0">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (!sending) { setShowModal(false); setSuccess(false); }}} />
-          <div className="relative bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
+          <div className="relative bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl max-h-[95vh] flex flex-col">
+
             {success ? (
               <div className="p-8 text-center space-y-4">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto"><TbCheck className="text-green-600" size={40} /></div>
                 <h3 className="font-bold text-gray-900 text-xl">Commande envoyee !</h3>
-                <p className="text-gray-500 text-sm">Votre commande a ete enregistree. Le vendeur va la confirmer sous peu.</p>
-                <button onClick={() => { setShowModal(false); setSuccess(false); setForm({ nom: "", phone: "", message: "" }); }}
+                <p className="text-gray-500 text-sm">Le vendeur va vous contacter pour confirmer.</p>
+                <p className="text-xs text-gray-400">Livraison a : <span className="font-semibold text-gray-600">{getAdresse()}</span></p>
+                <button onClick={() => { setShowModal(false); setSuccess(false); setSite(""); setPavillon(""); setChambre(""); setHotelChambre(""); setMessage(""); }}
                   className="w-full bg-[#2B3090] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#1e2570]">Fermer</button>
               </div>
             ) : (
               <>
-                <div className="bg-[#2B3090] px-6 pt-6 pb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center"><TbShoppingBag className="text-white" size={22} /></div>
+                {/* Header fixe */}
+                <div className="bg-[#2B3090] px-5 pt-5 pb-4 flex-shrink-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center"><TbShoppingBag className="text-white" size={20} /></div>
                     <button onClick={() => setShowModal(false)} className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-white/70 hover:bg-white/20"><TbX size={16} /></button>
                   </div>
-                  <h3 className="text-white font-bold text-xl">Passer une commande</h3>
-                  <p className="text-white/60 text-sm mt-1">Remplissez vos informations pour commander</p>
-                  <div className="mt-4 bg-white/10 rounded-2xl p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/10 rounded-xl overflow-hidden flex-shrink-0">
-                      {images[0] ? <img src={images[0]} alt="" className="w-full h-full object-cover" /> : <TbPackage className="text-white/40 m-2.5" size={20} />}
+                  <h3 className="text-white font-bold text-lg">Passer une commande</h3>
+                  <div className="mt-3 bg-white/10 rounded-xl p-3 flex items-center gap-3">
+                    <div className="w-9 h-9 bg-white/10 rounded-lg overflow-hidden flex-shrink-0">
+                      {images[0] ? <img src={images[0]} alt="" className="w-full h-full object-cover" /> : <TbPackage className="text-white/40 m-2" size={16} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold text-sm truncate">{product.name}</p>
+                      <p className="text-white font-semibold text-xs truncate">{product.name}</p>
                       <p className="text-white/60 text-xs">x{qty} · {formatPrice(finalPrice * qty)}</p>
                     </div>
                     <p className="text-white font-bold text-sm flex-shrink-0">{formatPrice(finalPrice * qty)}</p>
                   </div>
                 </div>
-                <div className="px-6 py-5 space-y-4">
+
+                {/* Formulaire scrollable */}
+                <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+
+                  {/* Nom */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Prenom et Nom <span className="text-red-500">*</span></label>
-                    <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-                      placeholder="Ex: Cheikh Fall" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} autoFocus />
+                    <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Nom complet <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <TbUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+                      <input className={inputCls("nom") + " pl-9"} placeholder="Ex: Cheikh Oumar Fall"
+                        value={nom} onChange={e => { setNom(e.target.value); setFormErrors(p => ({...p, nom: ""})); }} />
+                    </div>
+                    {formErrors.nom && <p className="text-red-500 text-xs mt-1">{formErrors.nom}</p>}
                   </div>
+
+                  {/* Telephone */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Telephone WhatsApp <span className="text-red-500">*</span></label>
-                    <input className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-                      placeholder="+221 77 123 45 67" type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                    <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Telephone <span className="text-red-500">*</span></label>
+                    <div className="relative">
+                      <TbPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+                      <input className={inputCls("telephone") + " pl-9"} placeholder="+221 77 123 45 67" type="tel"
+                        value={telephone} onChange={e => { setTelephone(e.target.value); setFormErrors(p => ({...p, telephone: ""})); }} />
+                    </div>
+                    {formErrors.telephone && <p className="text-red-500 text-xs mt-1">{formErrors.telephone}</p>}
                   </div>
+
+                  {/* Campus */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Campus / Site <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {CAMPUS_SITES.map(s => (
+                        <button key={s} type="button"
+                          onClick={() => { setSite(s); setPavillon(""); setChambre(""); setHotelChambre(""); setFormErrors(p => ({...p, site: "", pavillon: "", chambre: "", hotelChambre: ""})); }}
+                          className={`py-2.5 px-1 rounded-xl text-xs font-bold border-2 transition-all text-center leading-tight ${
+                            site === s ? "border-[#2B3090] bg-[#2B3090]/5 text-[#2B3090]" : "border-gray-200 text-gray-500 hover:border-gray-300"
+                          }`}>
+                          <TbHome className="mx-auto mb-0.5" size={13} />{s}
+                        </button>
+                      ))}
+                    </div>
+                    {formErrors.site && <p className="text-red-500 text-xs mt-1">{formErrors.site}</p>}
+                  </div>
+
+                  {/* VCN : Pavillon */}
+                  {site === "VCN" && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Pavillon <span className="text-red-500">*</span></label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {VCN_PAVILLONS.map(p => (
+                          <button key={p} type="button"
+                            onClick={() => { setPavillon(p); setFormErrors(prev => ({...prev, pavillon: ""})); }}
+                            className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                              pavillon === p ? "border-[#2B3090] bg-[#2B3090]/5 text-[#2B3090]" : "border-gray-200 text-gray-500"
+                            }`}>
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                      {formErrors.pavillon && <p className="text-red-500 text-xs mt-1">{formErrors.pavillon}</p>}
+                    </div>
+                  )}
+
+                  {/* VCN : Chambre 1-60 */}
+                  {site === "VCN" && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Numero de chambre (1-60) <span className="text-red-500">*</span></label>
+                      <input className={inputCls("chambre")} placeholder="Ex: 24" type="number" min="1" max="60"
+                        value={chambre} onChange={e => { setChambre(e.target.value); setFormErrors(p => ({...p, chambre: ""})); }} />
+                      {formErrors.chambre && <p className="text-red-500 text-xs mt-1">{formErrors.chambre}</p>}
+                    </div>
+                  )}
+
+                  {/* Hotel du Rail : A1-A50 */}
+                  {site === "Hotel du Rail" && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Numero de chambre <span className="text-red-500">*</span></label>
+                      <div className="grid grid-cols-5 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                        {Array.from({ length: 50 }, (_, i) => `A${i + 1}`).map(c => (
+                          <button key={c} type="button"
+                            onClick={() => { setHotelChambre(c); setFormErrors(p => ({...p, hotelChambre: ""})); }}
+                            className={`py-2 rounded-lg text-xs font-bold border-2 transition-all ${
+                              hotelChambre === c ? "border-[#2B3090] bg-[#2B3090] text-white" : "border-gray-200 text-gray-600 hover:border-[#2B3090]/50"
+                            }`}>
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                      {formErrors.hotelChambre && <p className="text-red-500 text-xs mt-1">{formErrors.hotelChambre}</p>}
+                    </div>
+                  )}
+
+                  {/* Apercu adresse */}
+                  {site && (site === "Hors Campus" || (site === "VCN" && pavillon) || (site === "Hotel du Rail" && hotelChambre)) && (
+                    <div className="bg-[#2B3090]/5 border border-[#2B3090]/20 rounded-xl px-4 py-3 flex items-center gap-2">
+                      <TbMapPin className="text-[#2B3090] flex-shrink-0" size={15} />
+                      <p className="text-xs text-[#2B3090] font-semibold">{getAdresse()}</p>
+                    </div>
+                  )}
+
+                  {/* Message */}
                   <div>
                     <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Message (optionnel)</label>
-                    <textarea className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
-                      placeholder="Ex: Livraison au batiment B7 chambre 204..." rows={2} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
+                    <textarea className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                      placeholder="Ex: Je suis disponible de 14h a 18h..." rows={2}
+                      value={message} onChange={e => setMessage(e.target.value)} />
                   </div>
-                  <div className="flex gap-3 pt-1">
+                </div>
+
+                {/* Boutons fixes en bas */}
+                <div className="px-5 pb-5 pt-3 border-t border-gray-100 flex-shrink-0 space-y-2">
+                  <div className="flex gap-3">
                     <button onClick={() => setShowModal(false)} className="flex-1 border border-gray-200 py-3 rounded-xl text-sm text-gray-500 font-medium hover:bg-gray-50">Annuler</button>
-                    <button onClick={handleCommander} disabled={!form.nom.trim() || !form.phone.trim() || sending}
-                      className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40">
+                    <button onClick={handleCommander} disabled={sending}
+                      className="flex-1 bg-[#2B3090] text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-[#1e2570]">
                       {sending ? <TbLoader2 size={16} className="animate-spin" /> : <TbShoppingBag size={16} />}
                       {sending ? "Envoi..." : "Commander"}
                     </button>
                   </div>
-                  <p className="text-xs text-center text-gray-400">Le vendeur recevra votre commande et vous contactera pour confirmer</p>
+                  <p className="text-xs text-center text-gray-400">Le vendeur recevra votre commande et vous contactera</p>
                 </div>
               </>
             )}
@@ -307,15 +463,33 @@ export default function ProduitDetail() {
           )}
 
           {product.vendors?.shop_name && (
-            <Link href={"/vendeurs/" + product.vendors.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 bg-[#2B3090]/10 rounded-xl overflow-hidden flex items-center justify-center font-bold text-[#2B3090] flex-shrink-0">
-                {product.vendors.logo_url ? <img src={product.vendors.logo_url} alt="" className="w-full h-full object-cover" /> : product.vendors.shop_name[0].toUpperCase()}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-800">{product.vendors.shop_name}</p>
-                <p className="text-xs text-gray-400 flex items-center gap-1"><TbCheck size={11} className="text-green-500" /> Vendeur verifie · Voir la boutique</p>
-              </div>
-            </Link>
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <Link href={"/vendeurs/" + product.vendors.id} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 bg-[#2B3090]/10 rounded-xl overflow-hidden flex items-center justify-center font-bold text-[#2B3090] flex-shrink-0">
+                  {product.vendors.logo_url ? <img src={product.vendors.logo_url} alt="" className="w-full h-full object-cover" /> : product.vendors.shop_name[0].toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-800">{product.vendors.shop_name}</p>
+                  <p className="text-xs text-gray-400 flex items-center gap-1"><TbCheck size={11} className="text-green-500" /> Vendeur verifie · Voir la boutique</p>
+                </div>
+              </Link>
+              <button onClick={async () => {
+                if (!userId) { router.push("/auth/sign-in?redirect=" + window.location.pathname); return; }
+                const supabase = createClient();
+                const { data: existing } = await supabase.from("conversations").select("id")
+                  .eq("buyer_id", userId).eq("vendor_id", product.vendors.id).eq("produit_id", product.id).maybeSingle();
+                let convId = existing?.id;
+                if (!convId) {
+                  const { data: newConv } = await supabase.from("conversations").insert({
+                    buyer_id: userId, vendor_id: product.vendors.id, produit_id: product.id,
+                  }).select("id").single();
+                  convId = newConv?.id;
+                }
+                if (convId) router.push("/user/messages?conv=" + convId);
+              }} className="w-full mt-3 bg-primary/10 text-primary font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors text-sm">
+                <TbMessageCircle size={18} /> Contacter le vendeur
+              </button>
+            </div>
           )}
 
           <div className="bg-white rounded-2xl p-5 shadow-sm space-y-4">
@@ -338,8 +512,18 @@ export default function ProduitDetail() {
                 <TbAlertCircle size={20} /> Rupture de stock
               </div>
             ) : (
-              <button onClick={() => setShowModal(true)} className="w-full bg-[#2B3090] hover:bg-[#1e2570] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-colors text-base">
-                <TbShoppingBag size={22} /> Commander — {formatPrice(finalPrice * qty)}
+              <button
+                onClick={() => {
+                  if (!userId) {
+                    router.push("/auth/sign-in?redirect=" + encodeURIComponent(window.location.pathname) + "&role=buyer");
+                  } else {
+                    setShowModal(true);
+                  }
+                }}
+                className="w-full bg-[#2B3090] hover:bg-[#1e2570] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-colors text-base">
+                {userId
+                  ? <><TbShoppingBag size={22} /> Commander — {formatPrice(finalPrice * qty)}</>
+                  : <><TbLock size={22} /> Se connecter pour commander</>}
               </button>
             )}
             <p className="text-xs text-center text-gray-400">Le vendeur confirmera votre commande et vous contactera</p>
@@ -349,8 +533,6 @@ export default function ProduitDetail() {
 
       {/* Section Avis */}
       <div className="max-w-4xl mx-auto px-4 pb-10 space-y-4">
-
-        {/* Laisser un avis */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <h3 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2">
             <TbMessageCircle className="text-primary" size={22} /> Laisser un avis
@@ -384,7 +566,6 @@ export default function ProduitDetail() {
           )}
         </div>
 
-        {/* Liste des avis */}
         {reviews.length > 0 && (
           <div className="bg-white rounded-2xl p-6 shadow-sm">
             <h3 className="font-bold text-gray-800 text-lg mb-2 flex items-center gap-2">

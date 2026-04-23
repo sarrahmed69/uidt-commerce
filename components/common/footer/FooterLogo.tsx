@@ -1,9 +1,5 @@
 "use client";
 import { motion } from "framer-motion";
-import Image from "next/image";
-
-const WAVE_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Wave_money_logo.svg/320px-Wave_money_logo.svg.png";
-const OM_LOGO = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Orange_Money_logo.svg/320px-Orange_Money_logo.svg.png";
 
 function FooterLogo() {
   const logoVariants = {
@@ -14,32 +10,25 @@ function FooterLogo() {
   return (
     <div className="footer-logo-container">
       <motion.div
-        className="mb-5 flex items-center gap-4"
+        className="mb-5"
         variants={logoVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.5 }}
         transition={{ duration: 0.6 }}
       >
-        <Image
-          src="/images/uidt-logo.png"
-          alt="Universite Iba Der Thiam de Thies"
-          width={54}
-          height={54}
-          className="rounded-full object-cover flex-shrink-0 border-2 border-gray-200 bg-white"
-        />
         <div className="flex flex-col">
-          <span className="font-bold text-primary text-lg leading-tight tracking-wide">
-            UIDT Commerce
+          <span className="font-black text-2xl tracking-tight leading-none select-none" style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}>
+            <span style={{ color: "#1e4a9e" }}>Kay</span><span style={{ color: "#F5A623" }}>Jënd</span>
           </span>
-          <span className="text-[10px] text-gold font-semibold tracking-[0.2em] uppercase mt-0.5">
-            Campus Marketplace
+          <span className="text-[9px] text-gray-500 font-semibold tracking-[0.2em] uppercase mt-1.5">
+            Le marche du campus
           </span>
         </div>
       </motion.div>
 
       <motion.p
-        className="text-[13px] text-gray-500 mb-6 leading-relaxed max-w-xs"
+        className="text-[13px] text-white/70 mb-6 leading-relaxed max-w-xs"
         variants={logoVariants}
         initial="hidden"
         whileInView="visible"
@@ -57,7 +46,7 @@ function FooterLogo() {
         viewport={{ once: true, amount: 0.5 }}
         transition={{ duration: 0.6, delay: 0.3 }}
       >
-        <h3 className="mb-3 font-semibold text-slate-700 text-sm">
+        <h3 className="mb-3 font-semibold text-white text-sm">
           Paiements acceptes
         </h3>
 
@@ -78,7 +67,7 @@ function FooterLogo() {
           </div>
 
           {/* ORANGE MONEY */}
-          <div title="Orange Money" className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm cursor-default">
+          <div title="Orange Money" className="bg-white rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm cursor-default">
             <svg width="22" height="22" viewBox="0 0 44 44" fill="none">
               <path d="M8 8 L26 8 L36 20 L18 20 Z" fill="#1a1a1a"/>
               <path d="M18 24 L36 24 L28 36 L10 36 Z" fill="#FF6600"/>
@@ -101,7 +90,7 @@ function FooterLogo() {
 
         </div>
 
-        <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+        <p className="text-xs text-white/50 mt-3 leading-relaxed">
           Paiements en FCFA — La plateforme met en relation, le paiement se fait
           directement entre acheteur et vendeur.
         </p>

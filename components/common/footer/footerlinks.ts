@@ -14,7 +14,7 @@ const footerLinks = [
     ],
   },
   {
-    title: "UIDT Commerce",
+    title: "KayJend",
     links: [
       { name: "À propos", href: "/" },
       { name: "Comment ça marche", href: "/" },

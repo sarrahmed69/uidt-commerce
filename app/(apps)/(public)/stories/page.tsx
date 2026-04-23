@@ -20,7 +20,7 @@ export default function StoriesPage() {
   const [paused, setPaused]             = useState(false);
   const [muted, setMuted]               = useState(true);
   const [liked, setLiked]               = useState<Record<string, boolean>>({});
-  const [viewer, setViewer]             = useState(false);
+  const [viewer, setViewer]             = useState(true);
   const [showProducts, setShowProducts] = useState(false);
   const timerRef  = useRef<any>(null);
   const videoRef  = useRef<HTMLVideoElement>(null);
@@ -92,22 +92,36 @@ export default function StoriesPage() {
 
   const handleLike = async () => {
     if (!cs) return;
-    const already = liked[cs.id];
-    setLiked(l => ({ ...l, [cs.id]: !already }));
     const supabase = createClient();
-    await supabase.from("vendor_stories")
-      .update({ likes_count: (cs.likes_count || 0) + (already ? -1 : 1) })
-      .eq("id", cs.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    const already = liked[cs.id];
+    if (user) {
+      if (already) {
+        await supabase.from("story_likes").delete().eq("story_id", cs.id).eq("user_id", user.id);
+        await supabase.from("vendor_stories").update({ likes_count: Math.max(0, (cs.likes_count || 0) - 1) }).eq("id", cs.id);
+      } else {
+        const { error } = await supabase.from("story_likes").insert({ story_id: cs.id, user_id: user.id });
+        if (!error) await supabase.from("vendor_stories").update({ likes_count: (cs.likes_count || 0) + 1 }).eq("id", cs.id);
+      }
+    } else {
+      // Non connecte - like local uniquement
+      if (!already) await supabase.from("vendor_stories").update({ likes_count: (cs.likes_count || 0) + 1 }).eq("id", cs.id);
+    }
+    setLiked(l => ({ ...l, [cs.id]: !already }));
+    const newCount = already ? Math.max(0, (cs.likes_count || 0) - 1) : (cs.likes_count || 0) + 1;
+    setVendors(prev => prev.map((v, vi) =>
+      vi === activeVendor
+        ? { ...v, stories: v.stories.map((s: any) => s.id === cs.id ? { ...s, likes_count: newCount } : s) }
+        : v
+    ));
   };
 
   // Touch swipe
   const touchY = useRef(0);
-  const touchX = useRef(0);
-  const onTouchStart = (e: React.TouchEvent) => { touchY.current = e.touches[0].clientY; touchX.current = e.touches[0].clientX; };
+  const onTouchStart = (e: React.TouchEvent) => { touchY.current = e.touches[0].clientY; };
   const onTouchEnd = (e: React.TouchEvent) => {
     const dy = touchY.current - e.changedTouches[0].clientY;
-    const dx = touchX.current - e.changedTouches[0].clientX;
-    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) { dx > 0 ? goNext() : goPrev(); }
+    if (Math.abs(dy) > 40) { dy > 0 ? goNext() : goPrev(); }
   };
 
   if (loading) return (
@@ -212,7 +226,8 @@ export default function StoriesPage() {
   // ── VIEWER FULLSCREEN TIKTOK ─────────────────────────────────────────
   return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center overflow-hidden"
-      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
+      onWheel={e => { if (e.deltaY > 0) goNext(); else goPrev(); }}>
 
       <div className="relative w-full h-full max-w-sm mx-auto">
         {/* Media */}

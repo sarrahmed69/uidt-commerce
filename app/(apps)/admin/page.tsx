@@ -65,7 +65,7 @@ export default function AdminPage() {
     if (pending > prevPending.current && prevPending.current >= 0) {
       if (typeof window !== "undefined" && "Notification" in window) {
         Notification.requestPermission().then(perm => {
-          if (perm === "granted") new Notification("UIDT Commerce — Nouveau paiement", { body: pending + " paiement(s) en attente", icon: "/favicon.ico" });
+          if (perm === "granted") new Notification("KayJend — Nouveau paiement", { body: pending + " paiement(s) en attente", icon: "/favicon.ico" });
         });
       }
     }
@@ -195,7 +195,7 @@ export default function AdminPage() {
         <div className="bg-[#2B3090] p-8 text-center">
           <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><TbLock className="text-white" size={32} /></div>
           <h1 className="text-white font-bold text-xl">Espace Admin</h1>
-          <p className="text-white/50 text-sm mt-1">UIDT Commerce</p>
+          <p className="text-white/50 text-sm mt-1">KayJend</p>
         </div>
         <div className="p-6 space-y-4">
           <div>
@@ -307,7 +307,7 @@ export default function AdminPage() {
         <div className="flex items-center justify-between pt-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Panneau Admin</h1>
-            <p className="text-sm text-gray-400 mt-0.5">UIDT Commerce — Gestion complete</p>
+            <p className="text-sm text-gray-400 mt-0.5">KayJend — Gestion complete</p>
           </div>
           <div className="flex gap-2 flex-wrap justify-end">
             <button onClick={exportCSV} className="flex items-center gap-2 bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"><TbDownload size={16} /> CSV</button>
@@ -461,7 +461,7 @@ export default function AdminPage() {
           </>
         )}
 
-        <p className="text-xs text-center text-gray-300">Admin UIDT Commerce · Acces restreint</p>
+        <p className="text-xs text-center text-gray-300">Admin KayJend · Acces restreint</p>
       </div>
 
       {confirmSuspend && (

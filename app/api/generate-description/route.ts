@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
   content.push({
     type: "text",
-    text: `Tu es un expert en marketing pour une marketplace d'etudiants au Senegal (UIDT Commerce).
+    text: `Tu es un expert en marketing pour une marketplace d'etudiants au Senegal (KayJend).
 Genere une description courte et attractive (2-3 phrases max, 100 mots max) pour ce produit :
 - Nom : ${nom}
 ${imageBase64 ? "- Analyse l'image fournie et decris ce que tu vois du produit." : ""}
