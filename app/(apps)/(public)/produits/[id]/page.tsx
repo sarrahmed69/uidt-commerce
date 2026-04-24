@@ -196,7 +196,7 @@ export default function ProduitDetail() {
           (message ? `\n💬 Message : ${message}` : "") +
           `\n\nMerci de confirmer !`
         );
-        window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
+        
       }
       setSuccess(true);
       setSending(false);

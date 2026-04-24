@@ -103,7 +103,7 @@ export default function VendeurDetailPage() {
             <div className="flex gap-2 flex-shrink-0 flex-wrap">
               {phone && (
                 <>
-                  <a href={"https://wa.me/"+phone.replace(/\D/g,"")} target="_blank" className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"><TbBrandWhatsapp size={18} /> WhatsApp</a>
+                  
                   <a href={"tel:+221"+phone} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"><TbPhone size={18} /> Appeler</a>
                 </>
               )}

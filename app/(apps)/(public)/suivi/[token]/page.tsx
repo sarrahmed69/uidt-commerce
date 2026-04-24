@@ -153,8 +153,7 @@ export default function SuiviPage() {
               </div>
             </div>
             {waPhone && (
-              <a href={"https://wa.me/" + waPhone} target="_blank"
-                className="bg-[#25D366] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
+              <a href="/user/messages" className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2">
                 <TbBrandWhatsapp size={16} /> Contacter
               </a>
             )}

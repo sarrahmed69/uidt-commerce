@@ -137,7 +137,7 @@ export default function VendorCommandes() {
       const clientPhone = order.buyer_phone?.replace(/\D/g, "");
       if (clientPhone) {
         const msg = `Bonjour ${order.buyer_name} ! ✅\n\nVotre commande de ${fmt(order.total_price || 0)} a ete confirmee.\n\nMerci pour votre achat !`;
-        window.open("https://wa.me/" + clientPhone + "?text=" + encodeURIComponent(msg), "_blank");
+        , "_blank");
       }
     }
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
@@ -270,10 +270,7 @@ export default function VendorCommandes() {
                   </button>
 
                   {order.buyer_phone && (
-                    <a href={"https://wa.me/" + order.buyer_phone.replace(/\D/g, "")} target="_blank"
-                      className="flex items-center gap-1.5 bg-[#2B3090] text-white text-xs font-semibold px-3 py-2 rounded-xl hover:opacity-90">
-                      <TbBrandWhatsapp size={16} /> WhatsApp
-                    </a>
+                    <button onClick={() => router.push("/user/messages")} className="flex items-center gap-1.5 bg-primary text-white text-xs font-semibold px-3 py-2 rounded-xl hover:bg-accent"><TbMessageCircle size={16} /> Chat</button>
                   )}
                   {order.status === "pending" && (
                     <button onClick={() => updateStatus(order.id, "confirmed")} disabled={updating === order.id}
