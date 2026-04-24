@@ -133,13 +133,6 @@ export default function VendorCommandes() {
         if (p) await supabase.from("products").update({ stock: Math.max(0, (p.stock || 0) - item.qty) }).eq("id", item.id);
       }
     }
-    if (status === "confirmed" && order) {
-      const clientPhone = order.buyer_phone?.replace(/\D/g, "");
-      if (clientPhone) {
-        const msg = `Bonjour ${order.buyer_name} ! ✅\n\nVotre commande de ${fmt(order.total_price || 0)} a ete confirmee.\n\nMerci pour votre achat !`;
-        , "_blank");
-      }
-    }
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
     setUpdating(null);
   };
