@@ -1,21 +1,30 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import {
-  TbMessageCircle, TbLoader2, TbArrowLeft, TbSearch,
-} from "react-icons/tb";
+import { useRouter, useSearchParams } from "next/navigation";
+import { TbMessageCircle, TbLoader2, TbArrowLeft, TbSearch } from "react-icons/tb";
 import ChatBox from "@/components/chat/ChatBox";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const [conversations, setConversations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<any>(null);
   const [search, setSearch] = useState("");
-  const [isVendor, setIsVendor] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get("conv");
+
+  const selected = conversations.find(c => c.id === selectedId) || null;
+
+  const selectConv = (conv: any) => {
+    router.push(`/user/messages?conv=${conv.id}`);
+  };
+
+  const clearConv = () => {
+    router.push("/user/messages");
+  };
 
   useEffect(() => {
     (async () => {
@@ -24,18 +33,11 @@ export default function MessagesPage() {
       if (!user) { router.push("/auth/sign-in"); return; }
       setUserId(user.id);
 
-      // Verifier si aussi vendeur
       const { data: vendors } = await supabase.from("vendors").select("id").eq("user_id", user.id).limit(1);
-      setIsVendor(!!(vendors && vendors.length > 0));
       const vendorId = vendors?.[0]?.id;
 
-      // Toutes les conversations ou je suis acheteur OU vendeur
       const { data } = await supabase.from("conversations")
-        .select(`
-          *,
-          vendors(id, shop_name, logo_url, user_id),
-          products:produit_id(id, name, images, price)
-        `)
+        .select(`*, vendors(id, shop_name, logo_url, user_id), products:produit_id(id, name, images, price)`)
         .or(`buyer_id.eq.${user.id}${vendorId ? ",vendor_id.eq." + vendorId : ""}`)
         .order("last_message_at", { ascending: false });
 
@@ -44,6 +46,28 @@ export default function MessagesPage() {
     })();
   }, []);
 
+  // Realtime conversations
+  useEffect(() => {
+    if (!userId) return;
+    const supabase = createClient();
+    const channel = supabase.channel("conversations-" + userId)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "conversations",
+      }, async () => {
+        const { data: vendors } = await supabase.from("vendors").select("id").eq("user_id", userId).limit(1);
+        const vendorId = vendors?.[0]?.id;
+        const { data } = await supabase.from("conversations")
+          .select(`*, vendors(id, shop_name, logo_url, user_id), products:produit_id(id, name, images, price)`)
+          .or(`buyer_id.eq.${userId}${vendorId ? ",vendor_id.eq." + vendorId : ""}`)
+          .order("last_message_at", { ascending: false });
+        setConversations(data || []);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
   const filtered = conversations.filter((c: any) => {
     const name = c.vendors?.shop_name || "";
     return name.toLowerCase().includes(search.toLowerCase());
@@ -51,18 +75,8 @@ export default function MessagesPage() {
 
   const getOtherInfo = (conv: any) => {
     const isBuyer = conv.buyer_id === userId;
-    if (isBuyer) {
-      return {
-        name: conv.vendors?.shop_name || "Vendeur",
-        avatar: conv.vendors?.logo_url,
-        unread: conv.unread_buyer || 0,
-      };
-    }
-    return {
-      name: "Client",
-      avatar: null,
-      unread: conv.unread_vendor || 0,
-    };
+    if (isBuyer) return { name: conv.vendors?.shop_name || "Vendeur", avatar: conv.vendors?.logo_url, unread: conv.unread_buyer || 0 };
+    return { name: "Client", avatar: null, unread: conv.unread_vendor || 0 };
   };
 
   if (loading) return (
@@ -75,7 +89,7 @@ export default function MessagesPage() {
     <div className="min-h-screen bg-gray-50 flex">
 
       {/* Liste conversations */}
-      <div className={`${selected ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-96 border-r border-gray-100 bg-white`}>
+      <div className={`${selected ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-96 border-r border-gray-100 bg-white flex-shrink-0`}>
         <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-3 sticky top-0 bg-white z-10">
           <Link href="/user/dashboard" className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-200">
             <TbArrowLeft size={18} />
@@ -115,12 +129,10 @@ export default function MessagesPage() {
           ) : (
             filtered.map((conv: any) => {
               const other = getOtherInfo(conv);
-              const isSelected = selected?.id === conv.id;
+              const isSelected = selectedId === conv.id;
               return (
-                <button key={conv.id} onClick={() => setSelected(conv)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors text-left ${
-                    isSelected ? "bg-primary/5" : ""
-                  }`}>
+                <button key={conv.id} onClick={() => selectConv(conv)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors text-left ${isSelected ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary flex-shrink-0 overflow-hidden">
                     {other.avatar ? <img src={other.avatar} alt={other.name} className="w-full h-full object-cover" /> : other.name[0]?.toUpperCase()}
                   </div>
@@ -166,7 +178,7 @@ export default function MessagesPage() {
               image: selected.products.images?.[0],
               price: selected.products.price,
             } : undefined}
-            onBack={() => setSelected(null)}
+            onBack={clearConv}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center flex-col text-center px-6">
@@ -174,12 +186,18 @@ export default function MessagesPage() {
               <TbMessageCircle className="text-primary" size={40} />
             </div>
             <p className="font-bold text-gray-700 text-lg">Vos messages</p>
-            <p className="text-sm text-gray-400 max-w-xs mt-1">
-              Selectionnez une conversation pour commencer a discuter
-            </p>
+            <p className="text-sm text-gray-400 max-w-xs mt-1">Selectionnez une conversation pour commencer</p>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><TbLoader2 className="animate-spin text-primary" size={36} /></div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }
