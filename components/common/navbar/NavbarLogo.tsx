@@ -1,14 +1,18 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const NavbarLogo = () => (
-  <Link href="/" title="KayJend — Accueil" aria-label="KayJend — Accueil"
+  <Link href="/" title="KaayJend — Accueil" aria-label="KaayJend — Accueil"
     className="flex items-center group">
-    <span
-      className="font-black text-2xl md:text-3xl tracking-tight leading-none group-hover:scale-105 transition-transform duration-200 select-none"
-      style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif" }}
-    >
-      <span style={{ color: "#1e4a9e" }}>Kay</span><span style={{ color: "#F5A623" }}>Jënd</span>
-    </span>
+    <Image
+      src="/images/kayjend-logo-new.png"
+      alt="KaayJend"
+      width={200}
+      height={65}
+      priority
+      className="object-contain group-hover:scale-105 transition-transform duration-200"
+      style={{ width: "auto", height: 65 }}
+    />
   </Link>
 );
 

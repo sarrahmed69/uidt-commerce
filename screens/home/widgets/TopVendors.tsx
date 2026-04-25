@@ -2,16 +2,23 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import Image from "next/image";
 import { TbBuildingStore, TbArrowRight, TbCheck, TbX, TbChevronLeft, TbChevronRight } from "react-icons/tb";
 
 export default function TopVendors() {
   const [vendeurs, setVendeurs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStory, setActiveStory] = useState<{ stories: any[]; index: number; vendor: any } | null>(null);
+  const [isVendor, setIsVendor] = useState(false);
 
   useEffect(() => {
     (async () => {
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: v } = await supabase.from("vendors").select("id").eq("user_id", user.id).single();
+        if (v) setIsVendor(true);
+      }
       const { data: vendors } = await supabase
         .from("vendors")
         .select("id, shop_name, logo_url, is_verified, description")
@@ -86,9 +93,17 @@ export default function TopVendors() {
                     : "bg-[#2B3090]/10 text-[#2B3090] group-hover:bg-[#2B3090] group-hover:text-white"
                   }`}
               >
-                {v.logo_url
-                  ? <img src={v.logo_url} alt={v.shop_name} className="w-full h-full object-cover" />
-                  : v.shop_name?.[0]?.toUpperCase()}
+                {v.logo_url ? (
+                  <Image
+                    src={v.logo_url}
+                    alt={v.shop_name}
+                    width={56}
+                    height={56}
+                    className="w-full h-full object-cover"
+                    quality={60}
+                    sizes="56px"
+                  />
+                ) : v.shop_name?.[0]?.toUpperCase()}
               </div>
               <p className="font-bold text-gray-800 text-xs truncate">{v.shop_name}</p>
               {v.is_verified && (
@@ -110,16 +125,18 @@ export default function TopVendors() {
         </div>
       )}
 
-      <div className="mt-6 bg-gradient-to-r from-[#1A1F6B] to-[#2B3090] rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-white">
-          <h3 className="font-bold text-base">Vous voulez vendre sur le campus ?</h3>
-          <p className="text-white/60 text-sm mt-0.5">Creez votre boutique gratuitement en 2 minutes</p>
+      {!isVendor && (
+        <div className="mt-6 bg-gradient-to-r from-[#1A1F6B] to-[#2B3090] rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-white">
+            <h3 className="font-bold text-base">Vous voulez vendre sur le campus ?</h3>
+            <p className="text-white/60 text-sm mt-0.5">Creez votre boutique gratuitement en 2 minutes</p>
+          </div>
+          <Link href="/devenir-vendeur"
+            className="bg-[#F5A623] text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-[#d4891a] transition-colors whitespace-nowrap flex-shrink-0">
+            Devenir vendeur
+          </Link>
         </div>
-        <Link href="/devenir-vendeur"
-          className="bg-[#F5A623] text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-[#d4891a] transition-colors whitespace-nowrap flex-shrink-0">
-          Devenir vendeur →
-        </Link>
-      </div>
+      )}
 
       {activeStory && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={closeStory}>
@@ -133,9 +150,9 @@ export default function TopVendors() {
             </div>
             <div className="absolute top-8 left-3 right-3 flex items-center gap-2 z-10">
               <div className="w-8 h-8 rounded-full overflow-hidden bg-white/20 flex items-center justify-center text-white text-xs font-bold">
-                {activeStory.vendor.logo_url
-                  ? <img src={activeStory.vendor.logo_url} className="w-full h-full object-cover" alt="" />
-                  : activeStory.vendor.shop_name?.[0]}
+                {activeStory.vendor.logo_url ? (
+                  <Image src={activeStory.vendor.logo_url} width={32} height={32} className="w-full h-full object-cover" alt="" quality={60} />
+                ) : activeStory.vendor.shop_name?.[0]}
               </div>
               <span className="text-white text-xs font-semibold">{activeStory.vendor.shop_name}</span>
               <button onClick={closeStory} className="ml-auto text-white"><TbX size={20} /></button>

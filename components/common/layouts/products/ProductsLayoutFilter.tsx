@@ -1,204 +1,123 @@
 "use client";
-import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { BiFilter } from "react-icons/bi";
-import { motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { BiFilter, BiX } from "react-icons/bi";
 import MainLayout from "../main/MainLayout";
 
-// Filter Configurations
-const filterConfig = [
-  {
-    name: "Price",
-    key: "price",
-    options: [
-      { value: "0-25", label: "$0 - $25" },
-      { value: "25-50", label: "$25 - $50" },
-      { value: "50-75", label: "$50 - $75" },
-      { value: "75+", label: "$75+" },
-    ],
-  },
-  {
-    name: "Color",
-    key: "color",
-    options: [
-      { value: "white", label: "White" },
-      { value: "beige", label: "Beige" },
-      { value: "blue", label: "Blue" },
-      { value: "brown", label: "Brown" },
-      { value: "green", label: "Green" },
-    ],
-  },
-  {
-    name: "Size",
-    key: "size",
-    options: [
-      { value: "xs", label: "XS" },
-      { value: "s", label: "S" },
-      { value: "m", label: "M" },
-      { value: "l", label: "L" },
-      { value: "xl", label: "XL" },
-    ],
-  },
+const categories = [
+  "Livres & Cours", "Electronique", "Vetements & Mode",
+  "Alimentation", "Fournitures", "Logement",
+  "Services etudiants", "Sport & Loisirs",
 ];
 
-// Zod schema for validation
-const filterSchema = z.object({
-  price: z.array(z.string()).optional(),
-  color: z.array(z.string()).optional(),
-  size: z.array(z.string()).optional(),
-});
+const prices = [
+  { label: "Moins de 2 000 F", value: "0-2000" },
+  { label: "2 000 - 5 000 F", value: "2000-5000" },
+  { label: "5 000 - 15 000 F", value: "5000-15000" },
+  { label: "Plus de 15 000 F", value: "15000+" },
+];
 
-type FilterFormValues = z.infer<typeof filterSchema>;
+export default function ProductsLayoutFilter() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [open, setOpen] = useState(false);
+  const [categorie, setCategorie] = useState(searchParams.get("categorie") || "");
+  const [price, setPrice] = useState(searchParams.get("price") || "");
+  const [search] = useState(searchParams.get("search") || "");
 
-export default function ScalableFilters() {
-  const { control, handleSubmit, watch, reset } = useForm<FilterFormValues>({
-    resolver: zodResolver(filterSchema),
-    defaultValues: {
-      price: [],
-      color: [],
-      size: [],
-    },
-  });
-
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState<FilterFormValues>({});
-  const watchFilters = watch();
-
-  const onSubmit = (data: FilterFormValues) => {
-    setSelectedFilters(data);
-    console.log("Applied Filters:", data);
+  const applyFilters = () => {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (categorie) params.set("categorie", categorie);
+    if (price) params.set("price", price);
+    router.push(`/produits?${params.toString()}`);
+    setOpen(false);
   };
 
   const clearFilters = () => {
-    reset();
-    setSelectedFilters({});
+    setCategorie("");
+    setPrice("");
+    router.push("/produits");
   };
 
-  const selectedFilterCount = Object.values(watchFilters)
-    .flat()
-    .filter(Boolean).length;
-
-  const toggleFilter = () => setIsOpen((prev) => !prev);
+  const activeCount = [categorie, price].filter(Boolean).length;
 
   return (
     <MainLayout className="bg-white mt-3">
-      <section
-        aria-labelledby="filter-heading"
-        className="relative z-10 border-t border-b border-gray-200 grid items-center"
-      >
-        <h2 id="filter-heading" className="sr-only">
-          Filters
-        </h2>
-        <div className="relative col-start-1 row-start-1 py-4">
-          <div className="w-full flex items-center space-x-6 divide-x divide-gray-200 text-sm px-4 sm:px-6 lg:px-8">
-            <button
-              onClick={toggleFilter}
-              className="group text-gray-700 font-medium flex items-center"
-            >
-              <BiFilter
-                className="flex-none w-5 h-5 mr-2 text-gray-400 group-hover:text-gray-500"
-                aria-hidden="true"
-              />
-              Filters
+      <section className="border-t border-b border-gray-200">
+        <div className="flex items-center gap-4 py-3 px-2 text-sm">
+          <button onClick={() => setOpen(o => !o)}
+            className="flex items-center gap-2 font-medium text-gray-700 hover:text-[#2B3090] transition-colors">
+            <BiFilter size={20} />
+            Filtrer
+            {activeCount > 0 && (
+              <span className="bg-[#F5A623] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                {activeCount}
+              </span>
+            )}
+          </button>
+
+          {activeCount > 0 && (
+            <button onClick={clearFilters}
+              className="flex items-center gap-1 text-gray-400 hover:text-red-500 transition-colors text-xs">
+              <BiX size={16} /> Effacer tout
             </button>
-            <div className="pl-6 w-fit">
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-gray-500 whitespace-nowrap"
-              >
-                Clear all
-              </button>
-            </div>
-            <div className="pl-6 flex justify-end md:justify-between items-center w-full ">
-              <ul className="flex max-md:flex-col gap-4 max-md:hidden ">
-                {Object.entries(selectedFilters).map(([key, values]) =>
-                  values?.length ? (
-                    <li key={key}>
-                      <strong>{key}:</strong> {values.join(", ")}
-                    </li>
-                  ) : null
-                )}
-              </ul>
-              <h3 className="font-medium text-gray-900">
-                Selected Filters ({selectedFilterCount})
-              </h3>
-            </div>
-          </div>
+          )}
+
+          {categorie && (
+            <span className="bg-[#2B3090]/10 text-[#2B3090] text-xs px-2.5 py-1 rounded-full font-medium">
+              {categorie}
+            </span>
+          )}
+          {price && (
+            <span className="bg-[#F5A623]/10 text-[#d4891a] text-xs px-2.5 py-1 rounded-full font-medium">
+              {prices.find(p => p.value === price)?.label}
+            </span>
+          )}
         </div>
 
-        {/* Animated Disclosure Panel */}
-        <motion.div
-          initial={false}
-          animate={{ height: isOpen ? "auto" : 0 }}
-          className="overflow-hidden border-t border-gray-200"
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isOpen ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-            className="py-10"
-          >
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="max-w-7xl mx-auto grid grid-cols-2 gap-x-4 px-4 text-sm sm:px-6 md:gap-x-6 lg:px-8"
-            >
-              {filterConfig.map((filter) => (
-                <fieldset key={filter.key}>
-                  <legend className="block font-medium">{filter.name}</legend>
-                  <div className="pt-6 space-y-6 sm:pt-4 sm:space-y-4">
-                    {filter.options.map((option) => (
-                      <div
-                        key={option.value}
-                        className="flex items-center text-base sm:text-sm"
-                      >
-                        <Controller
-                          name={filter.key as "price" | "color" | "size" | `price.${number}` | `color.${number}` | `size.${number}`}
-                          control={control}
-                          render={({ field }) => {
-                            const currentValue = Array.isArray(field.value) ? field.value : [];
-                            return (
-                              <input
-                                id={`${filter.key}-${option.value}`}
-                                value={option.value}
-                                type="checkbox"
-                                className="flex-shrink-0 h-4 w-4 border-gray-300 rounded text-indigo-600 focus:ring-indigo-500"
-                                checked={currentValue.includes(option.value)}
-                                onChange={() =>
-                                  field.onChange(
-                                    currentValue.includes(option.value)
-                                      ? currentValue.filter(item => item !== option.value)
-                                      : [...currentValue, option.value]
-                                  )
-                                }
-                              />
-                            );
-                          }}
-                        />
-                        <label
-                          htmlFor={`${filter.key}-${option.value}`}
-                          className="ml-3 min-w-0 flex-1 text-gray-600"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </fieldset>
-              ))}
-              <div className="col-span-2 flex justify-center mt-6">
-                <button
-                  type="submit"
-                  className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700"
-                >
-                  Apply Filters
-                </button>
+        {open && (
+          <div className="border-t border-gray-100 py-6 px-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <p className="font-semibold text-gray-800 mb-3 text-sm">Categorie</p>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map(cat => (
+                    <button key={cat} onClick={() => setCategorie(cat === categorie ? "" : cat)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-all font-medium ${
+                        categorie === cat
+                          ? "bg-[#2B3090] text-white border-[#2B3090]"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-[#2B3090]"
+                      }`}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </form>
-          </motion.div>
-        </motion.div>
+
+              <div>
+                <p className="font-semibold text-gray-800 mb-3 text-sm">Prix</p>
+                <div className="flex flex-wrap gap-2">
+                  {prices.map(p => (
+                    <button key={p.value} onClick={() => setPrice(p.value === price ? "" : p.value)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-all font-medium ${
+                        price === p.value
+                          ? "bg-[#F5A623] text-white border-[#F5A623]"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-[#F5A623]"
+                      }`}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <button onClick={applyFilters}
+              className="mt-6 bg-[#2B3090] text-white px-6 py-2 rounded-xl text-sm font-semibold hover:bg-[#1a1f6e] transition-colors">
+              Appliquer les filtres
+            </button>
+          </div>
+        )}
       </section>
     </MainLayout>
   );

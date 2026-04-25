@@ -8,20 +8,14 @@ import { Zoom, ToastContainer } from "react-toastify";
 import ServiceWorkerRegister from "@/components/notifications/ServiceWorkerRegister";
 import InstallAppBanner from "@/components/notifications/InstallAppBanner";
 
-export const viewport: Viewport = {
-  themeColor: "#2B3090",
-};
+export const viewport: Viewport = { themeColor: "#2B3090" };
 
 export const metadata: Metadata = {
   title: "KayJend | Le marche du campus UIDT",
   description: "La marketplace du campus de l Universite de Thies - Achetez et vendez facilement entre etudiants.",
   keywords: "KayJend, Universite de Thies, campus marketplace, etudiant, vente, achat, Wave, Orange Money, FCFA",
   manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "KayJend",
-  },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "KayJend" },
   openGraph: {
     title: "KayJend - Le marche du campus",
     description: "Achetez et vendez facilement sur le campus de l Universite de Thies",
@@ -39,8 +33,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="KayJend" />
+        {/* Preconnect Supabase — gain LCP 300ms */}
+        <link rel="preconnect" href="https://lcaddyeamrtsyvggcrpa.supabase.co" />
+        <link rel="dns-prefetch" href="https://lcaddyeamrtsyvggcrpa.supabase.co" />
       </head>
-      <body className="antialiased" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
+      <body className="antialiased" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
         <ServiceWorkerRegister />
         <InstallAppBanner />
         <QueryProvider>

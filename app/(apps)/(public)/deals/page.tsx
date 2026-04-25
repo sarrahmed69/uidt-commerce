@@ -1,9 +1,12 @@
-import React from 'react'
-import ProductsLayout from '@/components/common/layouts/products/ProductsLayout'
+import { Suspense } from "react";
+import ProductsLayout from "@/components/common/layouts/products/ProductsLayout";
+
 const Deals = () => {
   return (
-   <ProductsLayout/>
-  )
-}
+    <Suspense fallback={null}>
+      <ProductsLayout />
+    </Suspense>
+  );
+};
 
-export default Deals
+export default Deals;

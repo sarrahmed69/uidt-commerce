@@ -4,44 +4,29 @@ import MainLayout from "../layouts/main/MainLayout";
 import FooterEnding from "./FooterEnding";
 import FooterLinksList from "./FooterLinksList";
 import FooterLogo from "./FooterLogo";
-import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { EXCLUDED_PATHS } from "@/lib/constants";
 
 const Footer = () => {
   const pathname = usePathname();
   const shouldDisplayFooter = !EXCLUDED_PATHS.some((path) => pathname.startsWith(path));
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
   if (!shouldDisplayFooter) return null;
+
   return (
     <MainLayout>
-      <footer className="flex lg:flex-row flex-col gap-y-12 mt-16 mb-7 border-y-2 py-12 border-gray-300 gap-x-16 overflow-x-hidden">
-        <div className="w-full lg:w-1/2">
+      <footer className="flex lg:flex-row flex-col gap-y-10 mt-12 mb-6 border-y border-gray-200 py-10 gap-x-16">
+        <div className="w-full lg:w-1/3">
           <FooterLogo />
         </div>
-        <motion.div
-          className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 justify-between w-full items-start gap-x-3"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 w-full items-start">
           {footerLinks?.map((footerLink) => (
-            <motion.div variants={itemVariants} key={footerLink.title}>
-              <FooterLinksList title={footerLink.title} links={footerLink.links} />
-            </motion.div>
+            <FooterLinksList key={footerLink.title} title={footerLink.title} links={footerLink.links} />
           ))}
-        </motion.div>
+        </div>
       </footer>
       <FooterEnding />
     </MainLayout>
   );
 };
+
 export default Footer;
