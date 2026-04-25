@@ -7,11 +7,13 @@ const NavbarLogo = () => (
     <Image
       src="/images/kayjend-logo-new.png"
       alt="KaayJend"
-      width={200}
-      height={65}
+      width={130}
+      height={42}
       priority
+      quality={75}
+      sizes="130px"
       className="object-contain group-hover:scale-105 transition-transform duration-200"
-      style={{ width: "auto", height: 65 }}
+      style={{ width: "auto", height: 42 }}
     />
   </Link>
 );
