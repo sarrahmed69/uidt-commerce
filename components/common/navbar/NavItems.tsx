@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import useBrowserWidth from "@/hooks/useBrowserWidth";
 
 interface NavItem {
@@ -6,15 +6,11 @@ interface NavItem {
   title: string;
   href: string;
 }
-
 interface NavItemsProps {
   navItems: NavItem[];
   activePage: number;
   handlePageChange: (index: number) => void;
-  onEnterClick: (
-    event: React.KeyboardEvent<HTMLLIElement>,
-    index: number
-  ) => void;
+  onEnterClick: (event: React.KeyboardEvent<HTMLLIElement>, index: number) => void;
 }
 
 const NavItems: React.FC<NavItemsProps> = ({
@@ -24,9 +20,9 @@ const NavItems: React.FC<NavItemsProps> = ({
   onEnterClick,
 }) => {
   const { isMobile } = useBrowserWidth();
-
   return (
     <ul
+      role="menubar"
       className={`flex items-center ${
         isMobile ? "flex-col justify-start text-xl" : "justify-center gap-x-8"
       }`}
@@ -34,23 +30,28 @@ const NavItems: React.FC<NavItemsProps> = ({
       {navItems.map((navItem, i) => (
         <li
           key={navItem.key}
-          className={` text-gray-600 relative whitespace-nowrap flex justify-center items-center
-             gap-x-1 cursor-pointer before:absolute before:h-[2px] before:bg-[#2B3090] before:bottom-0
-             before:w-[0%] hover:before:w-full before:transition-all before:ease-in-out before:duration-300 ${
-            activePage === i ? "before:w-full" : ""
-          }`}
+          role="menuitem"
+          className="text-gray-600 relative whitespace-nowrap flex flex-col justify-center items-center gap-x-1 cursor-pointer"
           onClick={() => handlePageChange(i)}
           onKeyDown={(event) => onEnterClick(event, i)}
           tabIndex={0}
+          aria-current={activePage === i ? "page" : undefined}
         >
           <Link
             href={navItem.href}
             title={navItem.title}
             aria-label={navItem.title}
+            className="py-1 hover:text-[#2B3090] transition-colors duration-200"
           >
             {navItem.title}
           </Link>
-          {activePage === i && <hr className="bg-[#F5A623] h-[3px] w-full" />}
+          <span
+            className="block h-[2px] rounded-full transition-all duration-300 ease-in-out"
+            style={{
+              backgroundColor: "#2B3090",
+              width: activePage === i ? "100%" : "0%",
+            }}
+          />
         </li>
       ))}
     </ul>
