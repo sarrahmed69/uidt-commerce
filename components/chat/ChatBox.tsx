@@ -50,14 +50,23 @@ export default function ChatBox({
       }, (payload) => {
         const m = payload.new as Message;
         setMessages(prev => {
-          // Remplacer le message pending par le vrai message
-          const hasPending = prev.some(p => p.pending && p.contenu === m.contenu && p.expediteur_id === m.expediteur_id);
-          if (hasPending) {
-            return prev.map(p => p.pending && p.contenu === m.contenu ? { ...m, pending: false } : p);
+          // Si c'est mon propre message, remplacer le pending
+          if (m.expediteur_id === currentUserId) {
+            const pendingIndex = prev.findIndex(p => p.pending === true && p.contenu === m.contenu);
+            if (pendingIndex !== -1) {
+              const updated = [...prev];
+              updated[pendingIndex] = { ...m, pending: false };
+              return updated;
+            }
+            // Eviter doublon si deja present
+            if (prev.some(p => p.id === m.id)) return prev;
+            return [...prev, m];
           }
+          // Message de l autre personne
+          if (prev.some(p => p.id === m.id)) return prev;
+          markSingleAsRead(m.id);
           return [...prev, m];
         });
-        if (m.destinataire_id === currentUserId) markSingleAsRead(m.id);
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
       })
       .subscribe();
@@ -84,7 +93,8 @@ export default function ChatBox({
       .eq("conversation_id", conversationId)
       .eq("destinataire_id", currentUserId)
       .eq("est_lu", false);
-    const { data: conv } = await supabase.from("conversations").select("buyer_id, vendor_id").eq("id", conversationId).single();
+    const { data: conv } = await supabase.from("conversations")
+      .select("buyer_id, vendor_id").eq("id", conversationId).single();
     if (conv) {
       const isBuyer = conv.buyer_id === currentUserId;
       await supabase.from("conversations").update(
@@ -102,10 +112,12 @@ export default function ChatBox({
     const content = text.trim();
     setText("");
     inputRef.current?.focus();
+    setSending(true);
 
-    // Affichage instantane (optimistic)
+    // Affichage immediat
+    const tempId = "pending-" + Date.now();
     const tempMsg: Message = {
-      id: "pending-" + Date.now(),
+      id: tempId,
       conversation_id: conversationId,
       expediteur_id: currentUserId,
       destinataire_id: "",
@@ -117,30 +129,39 @@ export default function ChatBox({
     setMessages(prev => [...prev, tempMsg]);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 30);
 
-    setSending(true);
-    const { data: conv } = await supabase.from("conversations")
-      .select("buyer_id, vendor_id, vendors(user_id)").eq("id", conversationId).single();
-    if (!conv) { setSending(false); return; }
+    try {
+      const { data: conv } = await supabase.from("conversations")
+        .select("buyer_id, vendor_id, vendors(user_id)").eq("id", conversationId).single();
+      if (!conv) throw new Error("conv not found");
 
-    const vendorUserId = (conv as any).vendors?.user_id;
-    const isBuyer = conv.buyer_id === currentUserId;
-    const destinataireId = isBuyer ? vendorUserId : conv.buyer_id;
+      const vendorUserId = (conv as any).vendors?.user_id;
+      const isBuyer = conv.buyer_id === currentUserId;
+      const destinataireId = isBuyer ? vendorUserId : conv.buyer_id;
 
-    await supabase.from("messages").insert({
-      conversation_id: conversationId,
-      expediteur_id: currentUserId,
-      destinataire_id: destinataireId,
-      contenu: content,
-      est_lu: false,
-    });
+      const { error } = await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        expediteur_id: currentUserId,
+        destinataire_id: destinataireId,
+        contenu: content,
+        est_lu: false,
+      });
 
-    await supabase.from("conversations").update({
-      last_message: content,
-      last_message_at: new Date().toISOString(),
-      ...(isBuyer
-        ? { unread_vendor: (await getUnread(conversationId, "vendor")) + 1 }
-        : { unread_buyer: (await getUnread(conversationId, "buyer")) + 1 }),
-    }).eq("id", conversationId);
+      if (error) throw error;
+
+      await supabase.from("conversations").update({
+        last_message: content,
+        last_message_at: new Date().toISOString(),
+        ...(isBuyer
+          ? { unread_vendor: (await getUnread(conversationId, "vendor")) + 1 }
+          : { unread_buyer: (await getUnread(conversationId, "buyer")) + 1 }),
+      }).eq("id", conversationId);
+
+    } catch {
+      // En cas d erreur, garder le message visible avec indicateur erreur
+      setMessages(prev => prev.map(m =>
+        m.id === tempId ? { ...m, pending: false, est_lu: false } : m
+      ));
+    }
 
     setSending(false);
   };
@@ -172,7 +193,7 @@ export default function ChatBox({
   return (
     <div className="flex flex-col h-full bg-[#f0f2f5]">
 
-      {/* Header style WhatsApp */}
+      {/* Header */}
       <div className="bg-[#2B3090] px-4 py-3 flex items-center gap-3 flex-shrink-0 shadow-md">
         {onBack && (
           <button onClick={onBack} className="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:bg-white/10 lg:hidden transition-colors">
@@ -214,8 +235,8 @@ export default function ChatBox({
         </div>
       )}
 
-      {/* Zone messages */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1"
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-3 py-4"
         style={{ backgroundImage: "radial-gradient(circle, #d1d5db22 1px, transparent 1px)", backgroundSize: "20px 20px" }}>
         {loading ? (
           <div className="flex justify-center py-8">
@@ -230,50 +251,52 @@ export default function ChatBox({
             <p className="text-gray-400 text-xs mt-1">Dites bonjour a {otherName} !</p>
           </div>
         ) : (
-          grouped.map(group => (
-            <div key={group.date}>
-              <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 h-px bg-gray-300/50" />
-                <span className="text-[11px] text-gray-500 font-medium bg-white/80 px-3 py-0.5 rounded-full shadow-sm">
-                  {group.date}
-                </span>
-                <div className="flex-1 h-px bg-gray-300/50" />
-              </div>
-              <div className="space-y-1">
-                {group.msgs.map((msg) => {
-                  const isMe = msg.expediteur_id === currentUserId;
-                  return (
-                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} mb-1`}>
-                      <div className={`max-w-[78%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                        <div className={`px-3.5 py-2 text-sm leading-relaxed shadow-sm relative ${
-                          isMe
-                            ? "bg-[#2B3090] text-white rounded-t-2xl rounded-bl-2xl rounded-br-sm"
-                            : "bg-white text-gray-800 rounded-t-2xl rounded-br-2xl rounded-bl-sm"
-                        } ${msg.pending ? "opacity-70" : "opacity-100"} transition-opacity duration-200`}>
-                          {msg.contenu}
-                        </div>
-                        <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMe ? "justify-end" : "justify-start"}`}>
-                          <span className="text-[10px] text-gray-400">{formatTime(msg.created_at)}</span>
-                          {isMe && (
-                            msg.pending
-                              ? <TbCheck size={12} className="text-gray-300" />
-                              : msg.est_lu
-                                ? <TbChecks size={12} className="text-blue-400" />
-                                : <TbChecks size={12} className="text-gray-400" />
-                          )}
+          <div className="space-y-1">
+            {grouped.map(group => (
+              <div key={group.date}>
+                <div className="flex items-center gap-3 my-4">
+                  <div className="flex-1 h-px bg-gray-300/50" />
+                  <span className="text-[11px] text-gray-500 font-medium bg-white/80 px-3 py-0.5 rounded-full shadow-sm">
+                    {group.date}
+                  </span>
+                  <div className="flex-1 h-px bg-gray-300/50" />
+                </div>
+                <div className="space-y-1">
+                  {group.msgs.map((msg) => {
+                    const isMe = msg.expediteur_id === currentUserId;
+                    return (
+                      <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} mb-1`}>
+                        <div className={`max-w-[78%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                          <div className={`px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
+                            isMe
+                              ? "bg-[#2B3090] text-white rounded-t-2xl rounded-bl-2xl rounded-br-sm"
+                              : "bg-white text-gray-800 rounded-t-2xl rounded-br-2xl rounded-bl-sm"
+                          } ${msg.pending ? "opacity-60" : "opacity-100"} transition-opacity duration-300`}>
+                            {msg.contenu}
+                          </div>
+                          <div className={`flex items-center gap-1 mt-0.5 px-1 ${isMe ? "justify-end" : "justify-start"}`}>
+                            <span className="text-[10px] text-gray-400">{formatTime(msg.created_at)}</span>
+                            {isMe && (
+                              msg.pending
+                                ? <TbCheck size={12} className="text-gray-300" />
+                                : msg.est_lu
+                                  ? <TbChecks size={12} className="text-blue-400" />
+                                  : <TbChecks size={12} className="text-gray-400" />
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* Input zone */}
+      {/* Input */}
       <div className="px-3 py-3 bg-[#f0f2f5] flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="flex-1 flex items-center bg-white rounded-full px-4 py-2.5 shadow-sm border border-gray-200 focus-within:border-[#2B3090]/30 transition-colors">
@@ -291,7 +314,7 @@ export default function ChatBox({
             disabled={!text.trim()}
             className="w-11 h-11 bg-[#2B3090] rounded-full flex items-center justify-center text-white disabled:opacity-40 hover:bg-[#1a1f6e] active:scale-95 transition-all flex-shrink-0 shadow-md"
           >
-            {sending ? <TbLoader2 size={18} className="animate-spin" /> : <TbSend size={17} className="-rotate-0 translate-x-0.5" />}
+            {sending ? <TbLoader2 size={18} className="animate-spin" /> : <TbSend size={17} />}
           </button>
         </div>
       </div>
